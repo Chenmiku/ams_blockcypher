@@ -3,7 +3,7 @@ package signal
 import (
 	"fmt"
 	"http/web"
-	"myproject/dapi/api/auth/session"
+	"ams_system/dapi/api/auth/session"
 	"net/http"
 	"socket"
 )

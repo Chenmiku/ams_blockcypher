@@ -1,9 +1,9 @@
 package org
 
 import (
+	"ams_system/dapi/api/auth/session"
+	"ams_system/dapi/o/org/user"
 	"http/web"
-	"myproject/dapi/api/auth/session"
-	"myproject/dapi/o/org/user"
 	"net/http"
 	"strconv"
 	"strings"
@@ -45,6 +45,10 @@ func (s *UserServer) Session(w http.ResponseWriter, r *http.Request) *session.Se
 }
 
 func (s *UserServer) HandleAllUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
+		return
+	}
 
 	sortBy := r.URL.Query().Get("sort_by")
 	sortOrder := r.URL.Query().Get("sort_order")
@@ -66,6 +70,11 @@ func (s *UserServer) HandleAllUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *UserServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
+		return
+	}
+
 	var u = &user.User{}
 	s.MustDecodeBody(r, u)
 	u.Email = strings.ToLower(u.Email)
@@ -88,6 +97,11 @@ func (s *UserServer) mustGetUser(r *http.Request) (*user.User, error) {
 }
 
 func (s *UserServer) HandleUpdateByID(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "PUT" {
+		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
+		return
+	}
+
 	var newUser = &user.User{}
 	s.MustDecodeBody(r, newUser)
 	newUser.Email = strings.ToLower(newUser.Email)
@@ -110,6 +124,11 @@ func (s *UserServer) HandleUpdateByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *UserServer) HandleGetByID(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
+		return
+	}
+
 	u, err := s.mustGetUser(r)
 	if err != nil {
 		s.ErrorMessage(w, "user_not_found")
@@ -119,6 +138,11 @@ func (s *UserServer) HandleGetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *UserServer) HandleMarkDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
+		return
+	}
+
 	u, err := s.mustGetUser(r)
 	if err != nil {
 		s.ErrorMessage(w, "user_not_found")
@@ -133,6 +157,10 @@ func (s *UserServer) HandleMarkDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *UserServer) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
+		return
+	}
 
 	var change = &user.ChangePassword{}
 

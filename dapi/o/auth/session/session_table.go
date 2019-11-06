@@ -1,7 +1,7 @@
 package session
 
 import (
-	"myproject/dapi/o/model"
+	"ams_system/dapi/o/model"
 )
 
 var TableSession = model.NewTable("session")

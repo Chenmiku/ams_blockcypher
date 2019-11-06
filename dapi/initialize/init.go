@@ -3,8 +3,8 @@ package initialize
 import (
 	"context"
 	"db/mgo"
-	"myproject/dapi/config"
-	"myproject/dapi/httpserver"
+	"ams_system/dapi/config"
+	"ams_system/dapi/httpserver"
 	"util/runtime"
 )
 

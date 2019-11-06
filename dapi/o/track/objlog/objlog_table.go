@@ -1,7 +1,7 @@
 package objlog
 
 import (
-	"myproject/dapi/o/model"
+	"ams_system/dapi/o/model"
 )
 
 var TableObjLog = model.NewUnsafeTable("objlog", "obj")

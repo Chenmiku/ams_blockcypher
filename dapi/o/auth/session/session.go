@@ -3,7 +3,7 @@ package session
 import (
 	"db/mgo"
 	"encoding/json"
-	"myproject/dapi/o/org/user"
+	"ams_system/dapi/o/org/user"
 )
 
 type Session struct {

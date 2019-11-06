@@ -1,13 +1,9 @@
 package public
 
 import (
+	"ams_system/dapi/api/public/org"
+	"ams_system/dapi/config"
 	"http/web"
-	"myproject/dapi/api/public/category"
-	"myproject/dapi/api/public/chapter"
-	"myproject/dapi/api/public/comic"
-	"myproject/dapi/api/public/menu"
-	"myproject/dapi/api/public/org"
-	"myproject/dapi/config"
 	"net/http"
 )
 
@@ -22,9 +18,5 @@ func NewPublicServer(pc *config.ProjectConfig) *PublicServer {
 	}
 
 	s.Handle("/org/", http.StripPrefix("/org", org.NewOrgServer()))
-	s.Handle("/category/", http.StripPrefix("/category", category.NewCategoryServer()))
-	s.Handle("/chapter/", http.StripPrefix("/chapter", chapter.NewChapterServer()))
-	s.Handle("/comic/", http.StripPrefix("/comic", comic.NewComicServer()))
-	s.Handle("/menu/", http.StripPrefix("/menu", menu.NewMenuServer()))
 	return s
 }

@@ -2,7 +2,7 @@ package session
 
 import (
 	"http/web"
-	"myproject/dapi/o/auth/session"
+	"ams_system/dapi/o/auth/session"
 )
 
 const (

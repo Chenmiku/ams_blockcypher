@@ -3,7 +3,7 @@ package signal
 import (
 	"fmt"
 	"log"
-	"myproject/dapi/o/report/performance"
+	"ams_system/dapi/o/report/performance"
 	"net/http"
 	"socket"
 	"time"

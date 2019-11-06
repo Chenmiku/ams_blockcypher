@@ -2,7 +2,7 @@ package upgrade
 
 import (
 	"db/mgo"
-	"myproject/dapi/o/model"
+	"ams_system/dapi/o/model"
 )
 
 var TableUpgrade = model.NewTable("upgrade")

@@ -1,10 +1,9 @@
 package httpserver
 
 import (
+	"ams_system/dapi/api"
 	"http/gziphandler"
 	"http/static/vstatic"
-	"myproject/dapi/api"
-	"myproject/dapi/library"
 	"net/http"
 	"regexp"
 )
@@ -32,18 +31,6 @@ func (phs *ProjectHttpServer) addStaticHandler(s *http.ServeMux) {
 
 	var device = vstatic.NewVersionStatic(staticConfig.PlayerFolder)
 	s.Handle("/player/", http.StripPrefix("/player", webAssetGzipHandler(device)))
-
-	var seller = vstatic.NewVersionStatic(staticConfig.SellerFolder)
-	s.Handle("/seller/", http.StripPrefix("/seller", webAssetGzipHandler(seller)))
-
-	// storage
-	storageConfig := p.Station.Storage
-
-	var library = library.NewFileUploadServer(storageConfig.Upload, 0)
-
-	s.Handle("/library/", http.StripPrefix("/library", library))
-
-	s.Handle("/upload/", http.StripPrefix("/upload", http.FileServer(http.Dir(storageConfig.Upload))))
 }
 
 func (phs *ProjectHttpServer) makeHandler() http.Handler {
@@ -51,15 +38,10 @@ func (phs *ProjectHttpServer) makeHandler() http.Handler {
 	phs.addStaticHandler(server)
 	// application specific
 	apiServer := api.NewApiServer(phs.pc)
-	// service := service.NewServiceServer()
 
 	server.Handle("/api/",
 		gziphandler.GzipHandler(http.StripPrefix("/api", apiServer)),
 	)
-
-	// server.Handle("/service/",
-	// 	http.StripPrefix("/service", service),
-	// )
 
 	phs.ready <- struct{}{}
 	return server

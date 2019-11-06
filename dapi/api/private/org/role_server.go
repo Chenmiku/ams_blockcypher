@@ -3,7 +3,7 @@ package org
 import (
 	"gopkg.in/mgo.v2/bson"
 	"http/web"
-	"myproject/dapi/o/org/role"
+	"ams_system/dapi/o/org/role"
 	"net/http"
 )
 

@@ -3,9 +3,9 @@ package monitor
 import (
 	"http/web"
 	"log"
-	"myproject/dapi/api/auth/session"
-	"myproject/dapi/o/report/performance"
-	"myproject/dapi/service/signal"
+	"ams_system/dapi/api/auth/session"
+	"ams_system/dapi/o/report/performance"
+	"ams_system/dapi/service/signal"
 	"net/http"
 	"socket"
 )

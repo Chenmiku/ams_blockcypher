@@ -1,7 +1,7 @@
 package initialize
 
 import (
-	"myproject/dapi/x/mlog"
+	"ams_system/dapi/x/mlog"
 )
 
 var logger = mlog.NewTagLog("init2")

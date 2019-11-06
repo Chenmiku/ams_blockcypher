@@ -1,8 +1,8 @@
 package org
 
 import (
+	"ams_system/dapi/o/org/user"
 	"http/web"
-	"myproject/dapi/o/org/user"
 	"net/http"
 	"strconv"
 	"strings"
@@ -16,11 +16,16 @@ type userAPI struct {
 func newPublicUserAPI() *userAPI {
 	u := new(userAPI)
 	u.ServeMux = http.NewServeMux()
-	u.HandleFunc("/create", u.handleCreate)
+	u.HandleFunc("/", u.handleCreate)
 	return u
 }
 
 func (uapi *userAPI) handleCreate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
+		return
+	}
+
 	var u = &user.User{}
 	uapi.MustDecodeBody(r, u)
 	u.Email = strings.ToLower(u.Email)

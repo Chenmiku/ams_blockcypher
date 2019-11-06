@@ -3,7 +3,7 @@ package user
 import (
 	"errors"
 	"math/rand"
-	"myproject/dapi/o/model"
+	"ams_system/dapi/o/model"
 	"time"
 )
 

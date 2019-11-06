@@ -3,7 +3,7 @@ package activity
 import (
 	"db/mgo"
 	"http/web"
-	"myproject/dapi/o/model"
+	"ams_system/dapi/o/model"
 	"time"
 )
 

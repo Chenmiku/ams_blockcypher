@@ -1,8 +1,8 @@
 package private
 
 import (
+	"ams_system/dapi/api/private/org"
 	"http/web"
-	"myproject/dapi/api/private/org"
 	"net/http"
 )
 

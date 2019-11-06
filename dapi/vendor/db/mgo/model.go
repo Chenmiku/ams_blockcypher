@@ -41,5 +41,5 @@ func (b *BaseModel) BeforeUpdate() {
 }
 
 func (b *BaseModel) BeforeDelete() {
-
+	b.DTime = time.Now().Unix()
 }

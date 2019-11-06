@@ -2,7 +2,7 @@ package model
 
 import (
 	"db/mgo"
-	"myproject/dapi/config/cons"
+	"ams_system/dapi/config/cons"
 )
 
 type TableWithBranchCode struct {

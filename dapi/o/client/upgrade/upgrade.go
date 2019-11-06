@@ -1,7 +1,7 @@
 package upgrade
 
 import (
-	"myproject/dapi/o/model"
+	"ams_system/dapi/o/model"
 )
 
 type Upgrade struct {

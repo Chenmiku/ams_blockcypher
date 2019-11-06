@@ -2,7 +2,7 @@ package signal
 
 import (
 	"fmt"
-	"myproject/dapi/api/auth/session"
+	"ams_system/dapi/api/auth/session"
 	"socket"
 	"time"
 )

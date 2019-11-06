@@ -1,14 +1,8 @@
 package private
 
 import (
+	"ams_system/dapi/api/auth/session"
 	"http/web"
-	"myproject/dapi/api/auth/session"
-	"myproject/dapi/api/private/article"
-	"myproject/dapi/api/private/category"
-	"myproject/dapi/api/private/chapter"
-	"myproject/dapi/api/private/comic"
-	"myproject/dapi/api/private/contact"
-	"myproject/dapi/api/private/menu"
 	"net/http"
 )
 
@@ -23,12 +17,6 @@ func NewPrivateServer() *PrivateServer {
 	}
 
 	s.Handle("/org/", http.StripPrefix("/org", newOrgServer()))
-	s.Handle("/article/", http.StripPrefix("/article", article.NewArticleServer()))
-	s.Handle("/category/", http.StripPrefix("/category", category.NewCategoryServer()))
-	s.Handle("/contact/", http.StripPrefix("/contact", contact.NewContactServer()))
-	s.Handle("/comic/", http.StripPrefix("/comic", comic.NewComicServer()))
-	s.Handle("/chapter/", http.StripPrefix("/chapter", chapter.NewChapterServer()))
-	s.Handle("/menu/", http.StripPrefix("/menu", menu.NewMenuServer()))
 	return s
 }
 

@@ -2,10 +2,10 @@ package service
 
 import (
 	"http/web"
-	"myproject/dapi/api/auth/session"
-	"myproject/dapi/service/monitor"
-	"myproject/dapi/service/signal"
-	"myproject/dapi/service/test"
+	"ams_system/dapi/api/auth/session"
+	"ams_system/dapi/service/monitor"
+	"ams_system/dapi/service/signal"
+	"ams_system/dapi/service/test"
 	"net/http"
 )
 
