@@ -34,6 +34,7 @@ func NewCleanUser() interface{} {
 	return &User{}
 }
 
+// check unique email
 func (v *User) ensureUniqueEmail() error {
 	if err := TableUser.NotExist(map[string]interface{}{
 		"email": v.Email,

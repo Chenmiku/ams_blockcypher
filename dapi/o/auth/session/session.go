@@ -6,6 +6,7 @@ import (
 	"ams_system/dapi/o/org/user"
 )
 
+// Session
 type Session struct {
 	mgo.BaseModel `bson:",inline"`
 	Email         string    `json:"email"`

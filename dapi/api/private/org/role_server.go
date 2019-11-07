@@ -12,6 +12,7 @@ type RoleServer struct {
 	*http.ServeMux
 }
 
+// create server mux to handle api
 func NewRoleServer() *RoleServer {
 	var s = &RoleServer{
 		ServeMux: http.NewServeMux(),
@@ -24,6 +25,7 @@ func NewRoleServer() *RoleServer {
 	return s
 }
 
+// create role api 
 func (s *RoleServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	var u = &role.Role{}
 	s.MustDecodeBody(r, u)
@@ -38,6 +40,7 @@ func (s *RoleServer) mustGetRole(r *http.Request) *role.Role {
 	return u
 }
 
+// Update role by id api 
 func (s *RoleServer) HandleUpdateByID(w http.ResponseWriter, r *http.Request) {
 	var newRole = &role.Role{}
 	s.MustDecodeBody(r, newRole)
@@ -46,17 +49,20 @@ func (s *RoleServer) HandleUpdateByID(w http.ResponseWriter, r *http.Request) {
 	s.SendData(w, nil)
 }
 
+// Get role by id api 
 func (s *RoleServer) HandleGetByID(w http.ResponseWriter, r *http.Request) {
 	var u = s.mustGetRole(r)
 	s.SendData(w, u)
 }
 
+// Delete role api
 func (s *RoleServer) HandleMarkDelete(w http.ResponseWriter, r *http.Request) {
 	var u = s.mustGetRole(r)
 	web.AssertNil(role.MarkDelete(u.ID))
 	s.Success(w)
 }
 
+// Get all role api 
 func (s *RoleServer) HandleAllRole(w http.ResponseWriter, r *http.Request) {
 
 	sortBy := r.URL.Query().Get("sort_by")

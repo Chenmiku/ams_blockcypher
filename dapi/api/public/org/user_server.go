@@ -13,6 +13,7 @@ type userAPI struct {
 	*http.ServeMux
 }
 
+// create new server mux to handle api
 func newPublicUserAPI() *userAPI {
 	u := new(userAPI)
 	u.ServeMux = http.NewServeMux()
@@ -20,6 +21,7 @@ func newPublicUserAPI() *userAPI {
 	return u
 }
 
+// create user api without token
 func (uapi *userAPI) handleCreate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)

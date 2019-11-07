@@ -11,6 +11,7 @@ const (
 	errUnauthorizedAccess = web.Unauthorized("unauthorized_access")
 )
 
+// Get session by session id 
 func Get(sessionID string) (*session.Session, error) {
 	var s, err = session.GetByID(sessionID)
 	if err != nil {

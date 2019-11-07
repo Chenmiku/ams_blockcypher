@@ -8,6 +8,7 @@ import (
 
 var idMaker = math.RandStringMaker{Length: 40, Prefix: "s"}
 
+// session struct 
 type Session struct {
 	SessionID string    `json:"id"`
 	Email     string    `json:"email"`

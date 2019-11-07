@@ -13,6 +13,7 @@ type AuthServer struct {
 	web.JsonServer
 }
 
+// create server mux to handle api
 func NewAuthServer() *AuthServer {
 	var s = &AuthServer{
 		ServeMux: http.NewServeMux(),
@@ -34,6 +35,7 @@ func (s *AuthServer) MustGetUser(r *http.Request) (*user.User, error) {
 	}
 }
 
+// Get profile api  
 func (s *AuthServer) HandleGetProfile(w http.ResponseWriter, r *http.Request) {
 	u, err := s.MustGetUser(r)
 	if user.TableUser.IsErrNotFound(err) {
@@ -46,6 +48,7 @@ func (s *AuthServer) HandleGetProfile(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// login api
 func (s *AuthServer) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	var body = struct {
 		Email    string
@@ -73,11 +76,13 @@ func (s *AuthServer) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// logout api
 func (s *AuthServer) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	session.MustClear(r)
 	s.SendData(w, nil)
 }
 
+// Change pass api 
 func (s *AuthServer) handleChangePass(w http.ResponseWriter, r *http.Request) {
 	var body = struct {
 		OldPass   string `json:"old_pass"`

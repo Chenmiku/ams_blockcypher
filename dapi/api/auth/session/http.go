@@ -15,6 +15,7 @@ var bearerHeader = "Bearer"
 var accessToken = "token"
 var sessionLog = mlog.NewTagLog("session_log")
 
+// Get token from Authorization of header
 func MustGet(r *http.Request) *session.Session {
 	var sessionID = r.Header.Get(tokenHeader)
 	if strings.HasPrefix(sessionID, bearerHeader) {
@@ -27,6 +28,7 @@ func MustGet(r *http.Request) *session.Session {
 	return s
 }
 
+// Check scope
 func MustAuthScope(r *http.Request) *session.Session {
 	var query = r.URL.Query()
 	var sessionID = r.Header.Get(tokenHeader)
@@ -44,6 +46,7 @@ func MustAuthScope(r *http.Request) *session.Session {
 	return s
 }
 
+// Clear token when logout
 func MustClear(r *http.Request) {
 	var sessionID = r.Header.Get(tokenHeader)
 	if strings.HasPrefix(sessionID, bearerHeader) {
@@ -55,42 +58,13 @@ func MustClear(r *http.Request) {
 	}
 }
 
-// func MustGet(r *http.Request) *session.Session {
-// 	var sessionID = r.URL.Query().Get(accessToken)
-// 	var s, e = Get(sessionID)
-// 	if e != nil {
-// 		panic(e)
-// 	}
-// 	return s
-// }
-
-// func MustAuthScope(r *http.Request) *session.Session {
-// 	var query = r.URL.Query()
-// 	var sessionID = query.Get(accessToken)
-// 	var scope = query.Get("scope")
-// 	var s, e = Get(sessionID)
-// 	if e != nil {
-// 		panic(e)
-// 	}
-// 	if !s.Role.CanAccess(scope) {
-// 		panic(errUnauthorizedAccess)
-// 	}
-// 	return s
-// }
-
-// func MustClear(r *http.Request) {
-// 	var sessionID = r.URL.Query().Get(accessToken)
-// 	var e = session.MarkDelete(sessionID)
-// 	if e != nil {
-// 		sessionLog.Error(e, "remove session")
-// 	}
-// }
-
+// create new context
 func NewContext(c context.Context, s *session.Session) (context.Context, error) {
 	return context.WithValue(c, "session", s), nil
 
 }
 
+// map session object
 func FromContext(c context.Context) (*Session, error) {
 
 	var contextSession = c.Value("session")

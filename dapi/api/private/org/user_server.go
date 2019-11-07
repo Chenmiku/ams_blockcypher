@@ -14,6 +14,7 @@ type UserServer struct {
 	*http.ServeMux
 }
 
+// create server mux to handle user api
 func NewUserServer() *UserServer {
 	var s = &UserServer{
 		ServeMux: http.NewServeMux(),
@@ -44,12 +45,8 @@ func (s *UserServer) Session(w http.ResponseWriter, r *http.Request) *session.Se
 	return ses
 }
 
+// get all user api 
 func (s *UserServer) HandleAllUser(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
-		return
-	}
-
 	sortBy := r.URL.Query().Get("sort_by")
 	sortOrder := r.URL.Query().Get("sort_order")
 
@@ -69,12 +66,8 @@ func (s *UserServer) HandleAllUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// create user api 
 func (s *UserServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var u = &user.User{}
 	s.MustDecodeBody(r, u)
 	u.Email = strings.ToLower(u.Email)
@@ -96,12 +89,8 @@ func (s *UserServer) mustGetUser(r *http.Request) (*user.User, error) {
 	}
 }
 
+// update user api 
 func (s *UserServer) HandleUpdateByID(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "PUT" {
-		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var newUser = &user.User{}
 	s.MustDecodeBody(r, newUser)
 	newUser.Email = strings.ToLower(newUser.Email)
@@ -123,12 +112,8 @@ func (s *UserServer) HandleUpdateByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Get user by id api 
 func (s *UserServer) HandleGetByID(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
-		return
-	}
-
 	u, err := s.mustGetUser(r)
 	if err != nil {
 		s.ErrorMessage(w, "user_not_found")
@@ -137,12 +122,8 @@ func (s *UserServer) HandleGetByID(w http.ResponseWriter, r *http.Request) {
 	s.SendDataSuccess(w, u)
 }
 
+// delete user api 
 func (s *UserServer) HandleMarkDelete(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
-		return
-	}
-
 	u, err := s.mustGetUser(r)
 	if err != nil {
 		s.ErrorMessage(w, "user_not_found")
@@ -156,12 +137,8 @@ func (s *UserServer) HandleMarkDelete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Change pass api 
 func (s *UserServer) ChangePassword(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var change = &user.ChangePassword{}
 
 	s.MustDecodeBody(r, change)

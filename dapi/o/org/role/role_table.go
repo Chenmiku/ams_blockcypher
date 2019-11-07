@@ -5,7 +5,7 @@ import (
 )
 
 //TableBranch : Table in DB
-var RoleTable = model.NewTable("role")
+var RoleTable = model.NewTable("roles")
 
 //Create :
 func (b *Role) Create() error {

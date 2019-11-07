@@ -9,6 +9,7 @@ import (
 
 type password string
 
+// check valid password
 func (p password) isValid() error {
 	if len(p) < 6 {
 		return web.BadRequest("password_must_be_at_least_6_character")
@@ -16,6 +17,7 @@ func (p password) isValid() error {
 	return nil
 }
 
+// hash password
 func (p password) Hash() (string, error) {
 	if len(os.Getenv("nohash")) > 0 {
 		return string(p), nil
@@ -28,6 +30,7 @@ func (p password) Hash() (string, error) {
 	return string(s), nil
 }
 
+// compare password
 func (p password) Compare(hash string) error {
 	var err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(p))
 	if err != nil {
@@ -53,6 +56,7 @@ func (p password) HashTo(s *string) error {
 	}
 }
 
+// compare
 func (u *User) ComparePassword(p string) error {
 	return password(p).Compare(u.Password)
 }

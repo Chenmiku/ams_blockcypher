@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// create new session associate with user login
 func New(u *user.User) (*session.Session, error) {
 
 	var s = &session.Session{
@@ -23,6 +24,7 @@ func New(u *user.User) (*session.Session, error) {
 	return s, nil
 }
 
+// new 
 func MustNew(u *user.User) *session.Session {
 	s, e := New(u)
 	if e != nil {
