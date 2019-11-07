@@ -1,0 +1,541 @@
+{
+	"info": {
+		"_postman_id": "8d502b8d-e034-4a63-a98e-cdbf953ad8e8",
+		"name": "AMS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"admin@gmail.com\",\n\t\"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{url}}/api/auth/login",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ChangePassword",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/api/private/org/user/change_password",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"private",
+								"org",
+								"user",
+								"change_password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetProfile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/auth/get_profile",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"get_profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/auth/logout",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Create",
+					"request": {
+						"auth": {
+							"type": "bearer"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"admin@gmail.com\",\n\t\"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{url}}/api/public/org/user/create",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"public",
+								"org",
+								"user",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetAll",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/private/org/user/get_all?page_size=0&page_number=1&sort_by=first_name&sort_order=descending",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"private",
+								"org",
+								"user",
+								"get_all"
+							],
+							"query": [
+								{
+									"key": "page_size",
+									"value": "0"
+								},
+								{
+									"key": "page_number",
+									"value": "1"
+								},
+								{
+									"key": "sort_by",
+									"value": "first_name"
+								},
+								{
+									"key": "sort_order",
+									"value": "descending"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetByID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/private/org/user/get?id=20573bf8-b6eb-4527-9d16-f5768f23e501",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"private",
+								"org",
+								"user",
+								"get"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "20573bf8-b6eb-4527-9d16-f5768f23e501"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{url}}/api/private/org/user/update?id=20573bf8-b6eb-4527-9d16-f5768f23e501",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"private",
+								"org",
+								"user",
+								"update"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "20573bf8-b6eb-4527-9d16-f5768f23e501"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/private/org/user/mark_delete?id=03578147-1347-425f-88c8-e4ec6eadb088",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"private",
+								"org",
+								"user",
+								"mark_delete"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "03578147-1347-425f-88c8-e4ec6eadb088"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "CreateHasToken",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman.",
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"first_name\": \"Vũ\",\n\t\"last_name\": \"Thái\",\n\t\"email\": \"user@gmail.com\",\n\t\"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{url}}/api/private/org/user/create",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"private",
+								"org",
+								"user",
+								"create"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Roles",
+			"item": [
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\":\"user_standard\",\n  \"permission\":[\"user_manage\"],\n  \"user_id\": \"ac01ec3f-00de-4004-9a7b-4dd835e348f1\"\n}"
+						},
+						"url": {
+							"raw": "{{url}}/api/private/org/role/create",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"private",
+								"org",
+								"role",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/private/org/role/update?id=84bacd12-4b08-42ef-a2e8-c03037bf0862",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"private",
+								"org",
+								"role",
+								"update"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "84bacd12-4b08-42ef-a2e8-c03037bf0862"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetAll",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/private/org/role/get_all?page_size=0&page_number=0&sort_by=name&sort_order=ascending",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"private",
+								"org",
+								"role",
+								"get_all"
+							],
+							"query": [
+								{
+									"key": "page_size",
+									"value": "0"
+								},
+								{
+									"key": "page_number",
+									"value": "0"
+								},
+								{
+									"key": "sort_by",
+									"value": "name"
+								},
+								{
+									"key": "sort_order",
+									"value": "ascending"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetByID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/private/org/role/get?id=d5221d3f-9739-43f2-bd39-7253588a0805",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"private",
+								"org",
+								"role",
+								"get"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "d5221d3f-9739-43f2-bd39-7253588a0805"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/private/org/role/mark_delete?id=d5221d3f-9739-43f2-bd39-7253588a0805",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"private",
+								"org",
+								"role",
+								"mark_delete"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "d5221d3f-9739-43f2-bd39-7253588a0805"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/private/org/role/update?id=d5221d3f-9739-43f2-bd39-7253588a0805",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"private",
+								"org",
+								"role",
+								"update"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "d5221d3f-9739-43f2-bd39-7253588a0805"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"protocolProfileBehavior": {}
+}
