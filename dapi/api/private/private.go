@@ -2,7 +2,6 @@ package private
 
 import (
 	"ams_system/dapi/api/auth/session"
-	"ams_system/dapi/api/private/wallet"
 	"http/web"
 	"net/http"
 )
@@ -18,7 +17,6 @@ func NewPrivateServer() *PrivateServer {
 	}
 
 	s.Handle("/org/", http.StripPrefix("/org", newOrgServer()))
-	s.Handle("/wallet/", http.StripPrefix("/wallet", wallet.NewWalletServer()))
 	return s
 }
 
