@@ -17,17 +17,12 @@ type userAPI struct {
 func newPublicUserAPI() *userAPI {
 	u := new(userAPI)
 	u.ServeMux = http.NewServeMux()
-	u.HandleFunc("/", u.handleCreate)
+	u.HandleFunc("/create", u.handleCreate)
 	return u
 }
 
 // create user api without token
 func (uapi *userAPI) handleCreate(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "METHOD NOT ALLOWED", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var u = &user.User{}
 	uapi.MustDecodeBody(r, u)
 	u.Email = strings.ToLower(u.Email)

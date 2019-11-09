@@ -55,6 +55,16 @@ func (e NotFound) StatusCode() int {
 	return http.StatusNotFound
 }
 
+type TooManyRequest string
+
+func (e TooManyRequest) Error() string {
+	return string(e)
+}
+
+func (e TooManyRequest) StatusCode() int {
+	return http.StatusTooManyRequests
+}
+
 func AssertNil(err error) {
 	if err != nil {
 		panic(err)

@@ -35,12 +35,15 @@ func (phs *ProjectHttpServer) addStaticHandler(s *http.ServeMux) {
 
 func (phs *ProjectHttpServer) makeHandler() http.Handler {
 	var server = http.NewServeMux()
+	p := phs.pc
+	serverConfig := p.Station.Server
+	var ver = serverConfig.Version
 	phs.addStaticHandler(server)
 	// application specific
 	apiServer := api.NewApiServer(phs.pc)
 
-	server.Handle("/api/",
-		gziphandler.GzipHandler(http.StripPrefix("/api", apiServer)),
+	server.Handle("/api/" + ver + "/",
+		gziphandler.GzipHandler(http.StripPrefix("/api/" + ver, apiServer)),
 	)
 
 	phs.ready <- struct{}{}

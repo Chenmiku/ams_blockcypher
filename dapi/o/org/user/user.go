@@ -22,6 +22,9 @@ type User struct {
 	Active        bool   `bson:"active,omitempty" json:"active"`
 	Gender        string `bson:"gender,omitempty" json:"gender"`
 	Description   string `bson:"description,omitempty" json:"description"`
+	AcceptPrivacy bool   `bson:"accept_privacy,omitempty" json:"accept_privacy"`
+	AcceptTerms   bool   `bson:"accept_terms,omitempty" json:"accept_terms"`
+	EmailConfirm  bool   `bson:"email_confirm,omitempty" json:"email_confirm"`
 	CTime         int64  `bson:"ctime,omitempty" json:"ctime"` // Create Time
 }
 

@@ -72,7 +72,7 @@ func (s *AuthServer) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	var ses = session.MustNew(u)
 	s.SendData(w, map[string]interface{}{
 		"user":  u,
-		"token": ses.ID,
+		"token": "Bearer" + ses.ID,
 	})
 }
 

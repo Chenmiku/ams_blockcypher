@@ -16,6 +16,7 @@ type ServerConfig struct {
 	PrivateKey  string
 	// Shutdown
 	ShutdownWait int
+	Version string
 }
 
 func (s *ServerConfig) Addr() string {

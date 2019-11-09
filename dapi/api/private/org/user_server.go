@@ -57,7 +57,7 @@ func (s *UserServer) HandleAllUser(w http.ResponseWriter, r *http.Request) {
 	count, err := user.GetAll(pageSize, pageNumber, sortBy, sortOrder, &res)
 
 	if err != nil {
-		s.SendErrorMessage(w, err)
+		s.SendError(w, err)
 	} else {
 		s.SendDataSuccess(w, map[string]interface{}{
 			"users": res,
