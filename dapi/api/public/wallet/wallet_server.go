@@ -3,7 +3,6 @@ package wallet
 import (
 	"ams_system/dapi/api/auth/session"
 	"ams_system/dapi/o/wallet"
-	"fmt"
 	"http/web"
 	"net/http"
 	"strconv"
@@ -26,6 +25,7 @@ func NewWalletServer() *WalletServer {
 	s.HandleFunc("/create", s.HandleCreate)
 	s.HandleFunc("/get", s.HandleGetByID)
 	s.HandleFunc("/update", s.HandleUpdateByID)
+	s.HandleFunc("/add_address_to_wallet", s.HandleAddAddress)
 	s.HandleFunc("/mark_delete", s.HandleMarkDelete)
 	return s
 }
@@ -72,14 +72,11 @@ func (s *WalletServer) HandleGetAll(w http.ResponseWriter, r *http.Request) {
 func (s *WalletServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	var u = &wallet.Wallet{}
 	s.MustDecodeBody(r, u)
-	u.Token = "Bearer" + s.Session(w, r).SessionID
+	u.Token = "36fd54969a3e499b9bc8f51ee1480d8b"
 
-	btc := gobcy.API{"Bearer" + s.Session(w, r).SessionID, "bcy", "test"}
+	btc := gobcy.API{"36fd54969a3e499b9bc8f51ee1480d8b", "bcy", "test"}
 	wa := gobcy.Wallet{u.Name, u.Addresses}
-	fmt.Println(btc)
-	fmt.Println(wa)
-	walletName, err := btc.CreateWallet(wa)
-	fmt.Printf("Normal Wallet:%+v\n", walletName)
+	_, err := btc.CreateWallet(wa)
 	if err != nil {
 		s.SendError(w, err)
 		return
@@ -112,6 +109,33 @@ func (s *WalletServer) HandleUpdateByID(w http.ResponseWriter, r *http.Request) 
 		s.ErrorMessage(w, "wallet_not_found")
 		return
 	}
+	err = u.UpdateById(newWallet)
+	if err != nil {
+		s.ErrorMessage(w, err.Error())
+	} else {
+		result, err := wallet.GetByID(u.ID)
+		if err != nil {
+			s.ErrorMessage(w, "wallet_not_found")
+			return
+		}
+		s.SendDataSuccess(w, result)
+	}
+}
+
+// add address to wallet api
+func (s *WalletServer) HandleAddAddress(w http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query().Get("name")
+	var newWallet = &wallet.Wallet{}
+	s.MustDecodeBody(r, newWallet)
+	u, err := wallet.GetByName(name)
+	if err != nil {
+		s.ErrorMessage(w, "wallet_not_found")
+		return
+	}
+
+	btc := gobcy.API{u.Token, "btc", "main"}
+    _, err = btc.AddAddrWallet(name, newWallet.Addresses, false)
+
 	err = u.UpdateById(newWallet)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())

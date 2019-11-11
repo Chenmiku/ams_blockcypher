@@ -31,3 +31,5 @@ func (w *Wallet) UpdateById(newvalue *Wallet) error {
 
 	return TableWallet.UnsafeUpdateByID(w.ID, newvalue)
 }
+
+

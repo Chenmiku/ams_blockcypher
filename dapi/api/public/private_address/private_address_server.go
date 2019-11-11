@@ -2,6 +2,7 @@ package private_address
 
 import (
 	"ams_system/dapi/o/private_address"
+	"ams_system/dapi/o/wallet"
 	"http/web"
 	"net/http"
 	"strconv"
@@ -12,6 +13,11 @@ import (
 type PrivateAddressServer struct {
 	web.JsonServer
 	*http.ServeMux
+}
+
+type WalletAddress struct {
+	Wallet wallet.Wallet
+	Adress private_address.PrivateAddress
 }
 
 // create server mux to handle private address api
@@ -58,7 +64,7 @@ func (s *PrivateAddressServer) HandleGetAll(w http.ResponseWriter, r *http.Reque
 
 // create private address api
 func (s *PrivateAddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
-	userid := r.URL.Query().Get("user_id")
+	walletid := r.URL.Query().Get("wallet_id")
 
 	var u = &private_address.PrivateAddress{}
 	s.MustDecodeBody(r, u)
@@ -70,7 +76,7 @@ func (s *PrivateAddressServer) HandleCreate(w http.ResponseWriter, r *http.Reque
 		return
     }
 
-	u.UserID = userid
+	u.WalletID = walletid
 	u.Address = addrKeys.Address
 	u.PublicKey = addrKeys.Public
 	u.PrivateKey = addrKeys.Private

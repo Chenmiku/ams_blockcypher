@@ -21,9 +21,16 @@ func GetByName(name string) (*Wallet, error) {
 }
 
 func GetAll(pageSize int, pageNumber int, sortBy string, sortOrder string, userid string, wallet *[]Wallet) (int, error) {
-	var where = map[string]interface{}{
-		"dtime": 0,
-		"user_id": userid,
+	var where map[string]interface{}
+	if userid == "" {
+		where =  map[string]interface{}{
+			"dtime": 0,
+		}
+	} else {
+		where = map[string]interface{}{
+			"dtime": 0,
+			"user_id": userid,
+		}
 	}
 	exclude := []string{"token"}
 	return TableWallet.ReadPagingSortWithExclude(where, pageSize, pageNumber, sortBy, sortOrder, wallet, exclude)

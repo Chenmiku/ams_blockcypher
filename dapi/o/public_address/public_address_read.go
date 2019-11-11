@@ -15,11 +15,19 @@ func GetByAddress(address string) (*PublicAddress, error) {
 	}, &w)
 }
 
-func GetAllByWalletID(pageSize int, pageNumber int, sortBy string, sortOrder string, walletId string, pubaddress *[]PublicAddress) (int, error) {
-	var where = map[string]interface{}{
-		"dtime": 0,
-		"wallet_id": walletId,
+func GetAllByWalletID(pageSize int, pageNumber int, sortBy string, sortOrder string, walletid string, pubaddress *[]PublicAddress) (int, error) {
+	var where map[string]interface{}
+	if walletid == "" {
+		where =  map[string]interface{}{
+			"dtime": 0,
+		}
+	} else {
+		where = map[string]interface{}{
+			"dtime": 0,
+			"wallet_id": walletid,
+		}
 	}
+
 	exclude := []string{}
 	return TablePublicAddress.ReadPagingSortWithExclude(where, pageSize, pageNumber, sortBy, sortOrder, pubaddress, exclude)
 }
