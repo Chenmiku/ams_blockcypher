@@ -3,7 +3,6 @@ package wallet
 import (
 	"ams_system/dapi/api/auth/session"
 	"ams_system/dapi/o/wallet"
-	"fmt"
 	"http/web"
 	"net/http"
 	"strconv"
@@ -76,7 +75,7 @@ func (s *WalletServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	s.MustDecodeBody(r, u)
 	u.Token = "36fd54969a3e499b9bc8f51ee1480d8b"
 
-	btc := gobcy.API{u.Token, "btc", "main"}
+	btc := gobcy.API{u.Token, "bcy", "test"}
 	_, err := btc.CreateWallet(gobcy.Wallet{u.Name, u.Addresses})
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
@@ -134,7 +133,7 @@ func (s *WalletServer) HandleAddAddress(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	btc := gobcy.API{u.Token, "btc", "main"}
+	btc := gobcy.API{u.Token, "bcy", "test"}
 	_, err = btc.AddAddrWallet(name, newWallet.Addresses, false)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
@@ -166,7 +165,7 @@ func (s *WalletServer) HandleRemoveAddress(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	btc := gobcy.API{u.Token, "btc", "main"}
+	btc := gobcy.API{u.Token, "bcy", "test"}
 	err = btc.DeleteAddrWallet(name, newWallet.Addresses)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
@@ -189,7 +188,6 @@ loop:
 
 	u.Addresses = addressList
 	err = u.UpdateById(u)
-	fmt.Println(u)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
 	} else {
@@ -222,7 +220,7 @@ func (s *WalletServer) HandleMarkDelete(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	btc := gobcy.API{u.Token, "btc", "main"}
+	btc := gobcy.API{u.Token, "bcy", "test"}
 	err = btc.DeleteWallet(name)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())

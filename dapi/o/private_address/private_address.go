@@ -16,6 +16,7 @@ type PrivateAddress struct {
 	Wif           string `bson:"wif,omitempty" json:"wif"`
 	CoinType      string `bson:"coin_type,omitempty" json:"coin_type"`
 	WalletID      string `bson:"wallet_id,omitempty" json:"wallet_id"`
+	WalletName      string `bson:"wallet_name,omitempty" json:"wallet_name"`
 	ParentID      string `bson:"parent_id,omitempty" json:"parent_id"`
 	CTime         int64  `bson:"ctime,omitempty" json:"ctime"` // Create Time
 }

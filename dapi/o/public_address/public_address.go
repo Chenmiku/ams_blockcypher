@@ -12,6 +12,7 @@ type PublicAddress struct {
 	mgo.BaseModel          `bson:",inline"`
 	Address                string `bson:"address,omitempty" json:"address"`
 	WalletID               string `bson:"wallet_id,omitempty" json:"wallet_id"`
+	WalletName      	   string `bson:"wallet_name,omitempty" json:"wallet_name"`
 	TotalRevceived         int    `bson:"total_revceived,omitempty" json:"total_revceived"`
 	TotalSent              int    `bson:"total_sent,omitempty" json:"total_sent"`
 	Balance                int    `bson:"balance,omitempty" json:"balance"`

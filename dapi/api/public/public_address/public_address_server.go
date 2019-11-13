@@ -48,7 +48,7 @@ func (s *PublicAddressServer) HandleCreate(w http.ResponseWriter, r *http.Reques
 
 //get all public address api by walletid
 func (s *PublicAddressServer) HandleGetAll(w http.ResponseWriter, r *http.Request) {
-	walletId := r.URL.Query().Get("wallet_id")
+	walletName := r.URL.Query().Get("wallet_name")
 	sortBy := r.URL.Query().Get("sort_by")
 	sortOrder := r.URL.Query().Get("sort_order")
 
@@ -56,7 +56,7 @@ func (s *PublicAddressServer) HandleGetAll(w http.ResponseWriter, r *http.Reques
 	pageNumber := StrToInt(r.URL.Query().Get("page_number"))
 
 	var res = []public_address.PublicAddress{}
-	count, err := public_address.GetAllByWalletID(pageSize, pageNumber, sortBy, sortOrder, walletId, &res)
+	count, err := public_address.GetAllByWallet(pageSize, pageNumber, sortBy, sortOrder, walletName, &res)
 
 	if err != nil {
 		s.SendError(w, err)
@@ -111,7 +111,7 @@ func (s *PublicAddressServer) HandleBalance(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	btc := gobcy.API{"36fd54969a3e499b9bc8f51ee1480d8b", "btc", "main"}
+	btc := gobcy.API{"36fd54969a3e499b9bc8f51ee1480d8b", "bcy", "test"}
 	addr, err := btc.GetAddrBal(address, nil)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())

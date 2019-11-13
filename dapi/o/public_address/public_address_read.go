@@ -15,16 +15,16 @@ func GetByAddress(address string) (*PublicAddress, error) {
 	}, &w)
 }
 
-func GetAllByWalletID(pageSize int, pageNumber int, sortBy string, sortOrder string, walletid string, pubaddress *[]PublicAddress) (int, error) {
+func GetAllByWallet(pageSize int, pageNumber int, sortBy string, sortOrder string, walletName string, pubaddress *[]PublicAddress) (int, error) {
 	var where map[string]interface{}
-	if walletid == "" {
+	if walletName == "" {
 		where =  map[string]interface{}{
 			"dtime": 0,
 		}
 	} else {
 		where = map[string]interface{}{
 			"dtime": 0,
-			"wallet_id": walletid,
+			"wallet_name": walletName,
 		}
 	}
 
