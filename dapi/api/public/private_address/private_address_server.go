@@ -42,7 +42,7 @@ func StrToInt(s string) int {
 
 // get all address api by userid
 func (s *PrivateAddressServer) HandleGetAll(w http.ResponseWriter, r *http.Request) {
-	userId := r.URL.Query().Get("user_id")
+	walletId := r.URL.Query().Get("wallet_id")
 	sortBy := r.URL.Query().Get("sort_by")
 	sortOrder := r.URL.Query().Get("sort_order")
 
@@ -50,14 +50,14 @@ func (s *PrivateAddressServer) HandleGetAll(w http.ResponseWriter, r *http.Reque
 	pageNumber := StrToInt(r.URL.Query().Get("page_number"))
 
 	var res = []private_address.PrivateAddress{}
-	count, err := private_address.GetAllByUserID(pageSize, pageNumber, sortBy, sortOrder, userId, &res)
+	count, err := private_address.GetAllByWalletID(pageSize, pageNumber, sortBy, sortOrder, walletId, &res)
 
 	if err != nil {
 		s.SendError(w, err)
 	} else {
 		s.SendDataSuccess(w, map[string]interface{}{
 			"addresss": res,
-			"count":   count,
+			"count":    count,
 		})
 	}
 }
@@ -65,16 +65,24 @@ func (s *PrivateAddressServer) HandleGetAll(w http.ResponseWriter, r *http.Reque
 // create private address api
 func (s *PrivateAddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	walletid := r.URL.Query().Get("wallet_id")
+	var wa = &wallet.Wallet{}
+	var err error
+	if walletid != "" {
+		wa, err = wallet.GetByID(walletid)
+	}
 
 	var u = &private_address.PrivateAddress{}
 	s.MustDecodeBody(r, u)
 
 	btc := gobcy.API{"36fd54969a3e499b9bc8f51ee1480d8b", "btc", "main"}
 	addrKeys, err := btc.GenAddrKeychain()
-    if err != nil {
+	if err != nil {
 		s.ErrorMessage(w, err.Error())
 		return
-    }
+	}
+
+	wa.Addresses = append(wa.Addresses, addrKeys.Address)
+	err = wa.UpdateById(wa)
 
 	u.WalletID = walletid
 	u.Address = addrKeys.Address

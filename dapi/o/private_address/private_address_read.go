@@ -13,7 +13,7 @@ func GetByAddress(address string) (*PrivateAddress, error) {
 	}, &w)
 }
 
-func GetAllByUserID(pageSize int, pageNumber int, sortBy string, sortOrder string, walletid string, priaddress *[]PrivateAddress) (int, error) {
+func GetAllByWalletID(pageSize int, pageNumber int, sortBy string, sortOrder string, walletid string, priaddress *[]PrivateAddress) (int, error) {
 	var where map[string]interface{}
 	if walletid == "" {
 		where =  map[string]interface{}{
