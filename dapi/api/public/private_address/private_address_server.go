@@ -2,6 +2,7 @@ package private_address
 
 import (
 	"ams_system/dapi/o/private_address"
+	"ams_system/dapi/o/public_address"
 	"ams_system/dapi/o/wallet"
 	"http/web"
 	"net/http"
@@ -26,10 +27,10 @@ func NewPrivateAddressServer() *PrivateAddressServer {
 		ServeMux: http.NewServeMux(),
 	}
 
-	s.HandleFunc("/get_all", s.HandleGetAll)
-	s.HandleFunc("/generate", s.HandleCreate)
+	s.HandleFunc("/get_all", s.HandleGetAll) // 
+	s.HandleFunc("/generate", s.HandleCreate) // 
 	s.HandleFunc("/get", s.HandleGetByID)
-	s.HandleFunc("/get_by_address", s.HandleGetByAddress)
+	s.HandleFunc("/get_by_address", s.HandleGetByAddress) // 
 	s.HandleFunc("/update", s.HandleUpdateByID)
 	s.HandleFunc("/mark_delete", s.HandleMarkDelete)
 	return s
@@ -77,23 +78,53 @@ func (s *PrivateAddressServer) HandleCreate(w http.ResponseWriter, r *http.Reque
 
 	var u = &private_address.PrivateAddress{}
 	s.MustDecodeBody(r, u)
+	var pubAddress = &public_address.PublicAddress{}
 
 	btc := gobcy.API{"36fd54969a3e499b9bc8f51ee1480d8b", "bcy", "test"}
-	addrKeys, err := btc.GenAddrKeychain()
+	if walletName != "" {
+		_, addrKeys, err := btc.GenAddrWallet(walletName)
+		if err != nil {
+			s.ErrorMessage(w, err.Error())
+			return
+		}
+
+		wa.Addresses = append(wa.Addresses, addrKeys.Address)
+		err = wa.UpdateById(wa)
+	
+		u.WalletID = wa.ID
+		u.WalletName = wa.Name
+		u.Address = addrKeys.Address
+		u.PublicKey = addrKeys.Public
+		u.PrivateKey = addrKeys.Private
+		u.Wif = addrKeys.Wif
+
+		pubAddress.Address = addrKeys.Address
+		pubAddress.WalletID = wa.ID
+		pubAddress.WalletName = wa.Name
+	} else {
+		addrKeys, err := btc.GenAddrKeychain()
+		if err != nil {
+			s.ErrorMessage(w, err.Error())
+			return
+		}
+
+		wa.Addresses = append(wa.Addresses, addrKeys.Address)
+		err = wa.UpdateById(wa)
+	
+		u.Address = addrKeys.Address
+		u.PublicKey = addrKeys.Public
+		u.PrivateKey = addrKeys.Private
+		u.Wif = addrKeys.Wif
+
+		pubAddress.Address = addrKeys.Address
+	}
+
+	err = pubAddress.Create()
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
 		return
 	}
 
-	wa.Addresses = append(wa.Addresses, addrKeys.Address)
-	err = wa.UpdateById(wa)
-
-	u.WalletID = wa.ID
-	u.WalletName = wa.Name
-	u.Address = addrKeys.Address
-	u.PublicKey = addrKeys.Public
-	u.PrivateKey = addrKeys.Private
-	u.Wif = addrKeys.Wif
 	err = u.Create()
 	if err != nil {
 		s.ErrorMessage(w, err.Error())

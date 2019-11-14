@@ -2,7 +2,6 @@ package web
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/golang/glog"
 	"net/http"
 	"runtime/debug"
@@ -19,10 +18,6 @@ func (s *JsonServer) MustMethodPost(r *http.Request) {
 func (s *JsonServer) SendError(w http.ResponseWriter, err error) {
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
-		fmt.Println(err)
-		// werr, ok := err.(IWebError)
-		// fmt.Println(werr)
-		// fmt.Println(ok)
 		if werr, ok := err.(IWebError); ok {
 			w.WriteHeader(werr.StatusCode())
 		} else {
@@ -56,8 +51,8 @@ func (s *JsonServer) SendError(w http.ResponseWriter, err error) {
 func (s *JsonServer) SendCustomError(w http.ResponseWriter, err error) {
 	if err != nil {
 		w.Header().Add("Content-Type", "application/json")
-		s.sendJson(w, map[string]string{
-			"status": "error",
+		s.sendJson(w, map[string]interface{}{
+			"success": true,
 			"error":  err.Error(),
 		})
 	}
@@ -66,7 +61,7 @@ func (s *JsonServer) SendCustomError(w http.ResponseWriter, err error) {
 func (s *JsonServer) SendErrorData(w http.ResponseWriter, data interface{}) {
 	w.Header().Add("Content-Type", "application/json")
 	s.sendJson(w, map[string]interface{}{
-		"status": "error",
+		"success": true,
 		"data":   data,
 	})
 
@@ -84,7 +79,7 @@ func (s *JsonServer) SendJson(w http.ResponseWriter, v interface{}) {
 func (s *JsonServer) SendData(w http.ResponseWriter, v interface{}) {
 	w.Header().Add("Content-Type", "application/json")
 	s.sendJson(w, map[string]interface{}{
-		"status": "success",
+		"success": true,
 		"data":   v,
 	})
 }

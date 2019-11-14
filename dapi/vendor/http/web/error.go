@@ -72,3 +72,7 @@ func AssertNil(err error) {
 }
 
 var ErrServerError = InternalServerError("Internal Server Error")
+var ErrBadRequest = BadRequest("Bad Request")
+var ErrUnauthorized = Unauthorized("Unauthorized")
+var ErrNotFound = NotFound("Not Found")
+var ErrTooManyRequest = TooManyRequest("Too Many Request")
