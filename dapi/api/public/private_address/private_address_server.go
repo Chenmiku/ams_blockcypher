@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/blockcypher/gobcy"
+	"ams_system/dapi/config"
 )
 
 type PrivateAddressServer struct {
@@ -80,7 +81,7 @@ func (s *PrivateAddressServer) HandleCreate(w http.ResponseWriter, r *http.Reque
 	s.MustDecodeBody(r, u)
 	var pubAddress = &public_address.PublicAddress{}
 
-	btc := gobcy.API{"36fd54969a3e499b9bc8f51ee1480d8b", "bcy", "test"}
+	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	if walletName != "" {
 		_, addrKeys, err := btc.GenAddrWallet(walletName)
 		if err != nil {

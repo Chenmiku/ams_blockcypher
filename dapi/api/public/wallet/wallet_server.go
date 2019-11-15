@@ -3,6 +3,9 @@ package wallet
 import (
 	"ams_system/dapi/api/auth/session"
 	"ams_system/dapi/o/wallet"
+	"ams_system/dapi/o/private_address"
+	"ams_system/dapi/o/public_address"
+	"ams_system/dapi/config"
 	"http/web"
 	"net/http"
 	"strconv"
@@ -73,9 +76,9 @@ func (s *WalletServer) HandleGetAll(w http.ResponseWriter, r *http.Request) {
 func (s *WalletServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	var u = &wallet.Wallet{}
 	s.MustDecodeBody(r, u)
-	u.Token = "36fd54969a3e499b9bc8f51ee1480d8b"
+	u.Token = config.UserToken
 
-	btc := gobcy.API{u.Token, "bcy", "test"}
+	btc := gobcy.API{u.Token, config.CoinType, config.Chain}
 	_, err := btc.CreateWallet(gobcy.Wallet{u.Name, u.Addresses})
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
@@ -133,11 +136,42 @@ func (s *WalletServer) HandleAddAddress(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	btc := gobcy.API{u.Token, "bcy", "test"}
+	btc := gobcy.API{u.Token, config.CoinType, config.Chain}
 	_, err = btc.AddAddrWallet(name, newWallet.Addresses, false)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
 		return
+	}
+
+	addr := newWallet.Addresses
+	for i,_ := range addr {
+		var priAdd = &private_address.PrivateAddress{}
+		priAdd, err = private_address.GetByAddress(addr[i])
+		if err != nil {
+			s.ErrorMessage(w, "address_not_found")
+			return
+		}
+		priAdd.WalletID = u.ID
+		priAdd.WalletName = u.Name
+		err = priAdd.UpdateById(priAdd)
+		if err != nil {
+			s.ErrorMessage(w, err.Error())
+			return
+		}
+
+		var pubAdd = &public_address.PublicAddress{}
+		pubAdd, err = public_address.GetByAddress(addr[i])
+		if err != nil {
+			s.ErrorMessage(w, "address_not_found")
+			return
+		}
+		pubAdd.WalletID = u.ID
+		pubAdd.WalletName = u.Name
+		err = pubAdd.UpdateById(pubAdd)
+		if err != nil {
+			s.ErrorMessage(w, err.Error())
+			return
+		}
 	}
 
 	u.Addresses = append(u.Addresses, newWallet.Addresses...)
@@ -165,7 +199,7 @@ func (s *WalletServer) HandleRemoveAddress(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	btc := gobcy.API{u.Token, "bcy", "test"}
+	btc := gobcy.API{u.Token, config.CoinType, config.Chain}
 	err = btc.DeleteAddrWallet(name, newWallet.Addresses)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
@@ -183,6 +217,36 @@ loop:
 				i--
 				continue loop
 			}
+		}
+	}
+
+	for i,_ := range removeList {
+		var priAdd = &private_address.PrivateAddress{}
+		priAdd, err = private_address.GetByAddress(removeList[i])
+		if err != nil {
+			s.ErrorMessage(w, "address_not_found")
+			return
+		}
+		priAdd.WalletID = ""
+		priAdd.WalletName = ""
+		err = priAdd.UpdateById(priAdd)
+		if err != nil {
+			s.ErrorMessage(w, err.Error())
+			return
+		}
+
+		var pubAdd = &public_address.PublicAddress{}
+		pubAdd, err = public_address.GetByAddress(removeList[i])
+		if err != nil {
+			s.ErrorMessage(w, "address_not_found")
+			return
+		}
+		pubAdd.WalletID = ""
+		pubAdd.WalletName = ""
+		err = pubAdd.UpdateById(pubAdd)
+		if err != nil {
+			s.ErrorMessage(w, err.Error())
+			return
 		}
 	}
 
@@ -220,7 +284,7 @@ func (s *WalletServer) HandleMarkDelete(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	btc := gobcy.API{u.Token, "bcy", "test"}
+	btc := gobcy.API{u.Token, config.CoinType, config.Chain}
 	err = btc.DeleteWallet(name)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())

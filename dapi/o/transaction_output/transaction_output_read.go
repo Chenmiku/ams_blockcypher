@@ -7,14 +7,6 @@ func GetByID(id string) (*TransactionOutput, error) {
 	return &w, TableTransactionOutput.ReadByID(id, &w)
 }
 
-// func GetByHash(hash string) (*Transaction, error) {
-// 	var w Transaction
-// 	return &w, TableTransaction.ReadOne(map[string]interface{}{
-// 		"hash": hash,
-// 		"dtime": 0,
-// 	}, &w)
-// }
-
 func GetAllByTransactionID(pageSize int, pageNumber int, sortBy string, sortOrder string, transactionid string, tranOutput *[]TransactionOutput) (int, error) {
 	var where map[string]interface{}
 	if transactionid == "" {

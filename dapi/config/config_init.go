@@ -18,7 +18,7 @@ func ReadConfig() *ProjectConfig {
 	flag.Parse()
 
 	if *ver {
-		fmt.Print(currentVersion)
+		fmt.Print(CurrentVersion)
 		os.Exit(0)
 	}
 

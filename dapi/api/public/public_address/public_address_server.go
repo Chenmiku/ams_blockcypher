@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"github.com/blockcypher/gobcy"
+	"ams_system/dapi/config"
 )
 
 type PublicAddressServer struct {
@@ -96,10 +97,11 @@ func (s *PublicAddressServer) HandleBalance(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	btc := gobcy.API{"36fd54969a3e499b9bc8f51ee1480d8b", "bcy", "test"}
+	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	addr, err := btc.GetAddrBal(address, nil)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
+		return
 	}
 
 	ad.TotalRevceived = addr.TotalReceived

@@ -2,11 +2,6 @@ package wallet
 
 import ()
 
-func getWallet(where map[string]interface{}) (*Wallet, error) {
-	var w Wallet
-	return &w, TableWallet.ReadOne(where, &w)
-}
-
 func GetByID(id string) (*Wallet, error) {
 	var w Wallet
 	return &w, TableWallet.ReadByID(id, &w)
