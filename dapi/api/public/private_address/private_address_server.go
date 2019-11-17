@@ -17,21 +17,16 @@ type PrivateAddressServer struct {
 	*http.ServeMux
 }
 
-type WalletAddress struct {
-	Wallet wallet.Wallet
-	Adress private_address.PrivateAddress
-}
-
 // create server mux to handle private address api
 func NewPrivateAddressServer() *PrivateAddressServer {
 	var s = &PrivateAddressServer{
 		ServeMux: http.NewServeMux(),
 	}
 
-	s.HandleFunc("/get_all", s.HandleGetAll) // 
-	s.HandleFunc("/generate", s.HandleCreate) // 
+	s.HandleFunc("/get_all", s.HandleGetAll) 
+	s.HandleFunc("/generate", s.HandleCreate) 
 	s.HandleFunc("/get", s.HandleGetByID)
-	s.HandleFunc("/get_by_address", s.HandleGetByAddress) // 
+	s.HandleFunc("/get_by_address", s.HandleGetByAddress) 
 	s.HandleFunc("/update", s.HandleUpdateByID)
 	s.HandleFunc("/mark_delete", s.HandleMarkDelete)
 	return s

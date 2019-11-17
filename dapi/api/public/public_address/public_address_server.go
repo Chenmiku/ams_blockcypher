@@ -20,11 +20,11 @@ func NewPublicAddressServer() *PublicAddressServer {
 		ServeMux: http.NewServeMux(),
 	}
 
-	s.HandleFunc("/get_all", s.HandleGetAll) // 
+	s.HandleFunc("/get_all", s.HandleGetAll) 
 	s.HandleFunc("/get", s.HandleGetByID)
-	s.HandleFunc("/get_by_address", s.HandleGetByAddress) // 
+	s.HandleFunc("/get_by_address", s.HandleGetByAddress) 
 	s.HandleFunc("/update", s.HandleUpdateByID)
-	s.HandleFunc("/balance", s.HandleBalance) // 
+	s.HandleFunc("/balance", s.HandleBalance) 
 	s.HandleFunc("/mark_delete", s.HandleMarkDelete)
 	return s
 }
