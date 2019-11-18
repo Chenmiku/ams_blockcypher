@@ -7,6 +7,7 @@ import (
 	"http/web"
 	"net/http"
 	"strconv"
+	"fmt"
 
 	"github.com/blockcypher/gobcy"
 	"ams_system/dapi/config"
@@ -62,6 +63,7 @@ func (s *PrivateAddressServer) HandleGetAll(w http.ResponseWriter, r *http.Reque
 // create private address api
 func (s *PrivateAddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	walletName := r.URL.Query().Get("wallet_name")
+	coinType := r.URL.Query().Get("coin_type")
 	var wa = &wallet.Wallet{}
 	var err error
 	if walletName != "" {
@@ -75,6 +77,18 @@ func (s *PrivateAddressServer) HandleCreate(w http.ResponseWriter, r *http.Reque
 	var u = &private_address.PrivateAddress{}
 	s.MustDecodeBody(r, u)
 	var pubAddress = &public_address.PublicAddress{}
+
+	switch coinType {
+	case "btc":
+		config.CoinType = "btc"
+	case "eth":
+		config.CoinType = "eth"
+		walletName = ""
+	case "":
+		config.CoinType = "btc"
+	}
+
+	fmt.Println(walletName)
 
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	if walletName != "" {
@@ -93,6 +107,7 @@ func (s *PrivateAddressServer) HandleCreate(w http.ResponseWriter, r *http.Reque
 		u.PublicKey = addrKeys.Public
 		u.PrivateKey = addrKeys.Private
 		u.Wif = addrKeys.Wif
+		u.CoinType = coinType
 
 		pubAddress.Address = addrKeys.Address
 		pubAddress.WalletID = wa.ID
@@ -111,6 +126,7 @@ func (s *PrivateAddressServer) HandleCreate(w http.ResponseWriter, r *http.Reque
 		u.PublicKey = addrKeys.Public
 		u.PrivateKey = addrKeys.Private
 		u.Wif = addrKeys.Wif
+		u.CoinType = coinType
 
 		pubAddress.Address = addrKeys.Address
 	}

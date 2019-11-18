@@ -92,6 +92,15 @@ func (s *JsonServer) SendDataSuccess(w http.ResponseWriter, v interface{}) {
 	})
 }
 
+func (s *JsonServer) SendSuccessMessage(w http.ResponseWriter, message string, confirm bool) {
+	w.Header().Add("Content-Type", "application/json")
+	s.sendJson(w, map[string]interface{}{
+		"success": true,
+		"confirm": confirm,
+		"message":    message,
+	})
+}
+
 func (s *JsonServer) Success(w http.ResponseWriter) {
 	s.SendData(w, nil)
 }

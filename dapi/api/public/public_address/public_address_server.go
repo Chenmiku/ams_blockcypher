@@ -91,10 +91,21 @@ func (s *PublicAddressServer) HandleUpdateByID(w http.ResponseWriter, r *http.Re
 // balance public address api
 func (s *PublicAddressServer) HandleBalance(w http.ResponseWriter, r *http.Request) {
 	address := r.URL.Query().Get("address")
+	coinType := r.URL.Query().Get("coin_type")
 	ad, err := public_address.GetByAddress(address)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
 		return
+	}
+
+	// check coin type
+	switch coinType {
+	case "btc":
+		config.CoinType = "btc"
+	case "eth":
+		config.CoinType = "eth"
+	case "":
+		config.CoinType = "btc"
 	}
 
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
@@ -104,6 +115,7 @@ func (s *PublicAddressServer) HandleBalance(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// update public address balance
 	ad.TotalRevceived = addr.TotalReceived
 	ad.TotalSent = addr.TotalSent
 	ad.Balance = addr.Balance

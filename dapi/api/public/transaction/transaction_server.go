@@ -45,6 +45,7 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	sender := r.URL.Query().Get("sender")
 	receiver := r.URL.Query().Get("receiver")
 	value := StrToInt(r.URL.Query().Get("value"))
+	coinType := r.URL.Query().Get("coin_type")
 	if strconv.Itoa(value) == "" || value == 0 || sender == "" || receiver == "" {
 		s.SendError(w, web.ErrBadRequest)
 		return
@@ -69,13 +70,29 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	switch coinType {
+	case "btc":
+		config.CoinType = "btc"
+	case "eth":
+		config.CoinType = "eth"
+	case "":
+		config.CoinType = "btc"
+	}
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
+
 	// check fund
 	addr, err := btc.GetAddrBal(sender, nil)
 	if addr.Balance == 0 || addr.Balance < value {
 		s.ErrorMessage(w, "not_enough_fund")
 		return
 	}
+
+	// faucet, only use for test
+	// _, err = btc.Faucet(addr, 300000)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
 	// create new transaction
 	skel, err := btc.NewTX(gobcy.TempNewTX(sender, receiver, value), false)
 	if err != nil {
@@ -155,6 +172,7 @@ func (s *TransactionServer) HandleDeposit(w http.ResponseWriter, r *http.Request
 	privateKey := r.URL.Query().Get("private_key")
 	receiver := r.URL.Query().Get("receiver")
 	value := StrToInt(r.URL.Query().Get("value"))
+	coinType := r.URL.Query().Get("coin_type")
 	if strconv.Itoa(value) == "" || value == 0 || sender == "" || privateKey == "" || receiver == "" {
 		s.SendError(w, web.ErrBadRequest)
 		return
@@ -174,6 +192,14 @@ func (s *TransactionServer) HandleDeposit(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	switch coinType {
+	case "btc":
+		config.CoinType = "btc"
+	case "eth":
+		config.CoinType = "eth"
+	case "":
+		config.CoinType = "btc"
+	}
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	// check fund
 	addr, err := btc.GetAddrBal(sender, nil)
@@ -290,6 +316,7 @@ func (s *TransactionServer) HandleWithDraw(w http.ResponseWriter, r *http.Reques
 	sender := r.URL.Query().Get("sender")
 	receiver := r.URL.Query().Get("receiver")
 	value := StrToInt(r.URL.Query().Get("value"))
+	coinType := r.URL.Query().Get("coin_type")
 	if strconv.Itoa(value) == "" || value == 0 || sender == "" || receiver == "" {
 		s.SendError(w, web.ErrBadRequest)
 		return
@@ -309,6 +336,14 @@ func (s *TransactionServer) HandleWithDraw(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	switch coinType {
+	case "btc":
+		config.CoinType = "btc"
+	case "eth":
+		config.CoinType = "eth"
+	case "":
+		config.CoinType = "btc"
+	}
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	// check fund
 	addr, err := btc.GetAddrBal(sender, nil)
@@ -423,6 +458,7 @@ func (s *TransactionServer) HandleWithDraw(w http.ResponseWriter, r *http.Reques
 // check deposit state api
 func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *http.Request) {
 	hash := r.URL.Query().Get("hash")
+	coinType := r.URL.Query().Get("coin_type")
 	var u = &transaction.Transaction{}
 	u, err := transaction.GetByHash(hash)
 	if err != nil {
@@ -430,6 +466,14 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 		return
 	}
 
+	switch coinType {
+	case "btc":
+		config.CoinType = "btc"
+	case "eth":
+		config.CoinType = "eth"
+	case "":
+		config.CoinType = "btc"
+	}
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	// check exists transaction
 	_, err = btc.GetTX(hash, nil)
@@ -464,9 +508,9 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 			return
 		}
 
-		s.Success(w)
+		s.SendSuccessMessage(w, "transaction_confirmed", true)
 	} else {
-		s.ErrorMessage(w, "transaction_not_confirmed")
+		s.SendSuccessMessage(w, "transaction_not_confirmed", false)
 	}
 }
 
