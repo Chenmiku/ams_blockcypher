@@ -66,9 +66,9 @@ func(s *AddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 
 	switch coinType {
 	case "btc":
-		config.CoinType = "bcy"
+		config.CoinType = "btc"
 	case "eth":
-		config.CoinType = "beth"
+		config.CoinType = "eth"
 	case "":
 		config.CoinType = "btc"
 	}
@@ -135,9 +135,9 @@ func (s *AddressServer) HandleBalance(w http.ResponseWriter, r *http.Request) {
 	// check coin type
 	switch coinType {
 	case "btc":
-		config.CoinType = "bcy"
+		config.CoinType = "btc"
 	case "eth":
-		config.CoinType = "beth"
+		config.CoinType = "eth"
 	case "":
 		config.CoinType = "btc"
 	}

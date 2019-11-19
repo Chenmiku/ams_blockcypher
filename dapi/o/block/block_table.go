@@ -14,7 +14,7 @@ func (w *Block) Create() error {
 }
 
 func MarkDelete(id string) error {
-	return TableTransaction.MarkDelete(id)
+	return TableBlock.MarkDelete(id)
 }
 
 func (w *Block) UpdateById(newvalue *Block) error {

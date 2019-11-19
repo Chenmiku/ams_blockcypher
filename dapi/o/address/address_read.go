@@ -2,7 +2,6 @@ package address
 
 import (
 	"strconv"
-	"fmt"
 )
 
 func GetByID(id string) (*Address, error) {
@@ -20,7 +19,6 @@ func GetByAddress(address string) (*Address, error) {
 
 func GetAllByUser(pageSize int, pageNumber int, sortBy string, sortOrder string, userid int, address *[]Address) (int, error) {
 	var where map[string]interface{}
-	fmt.Println(userid)
 	if strconv.Itoa(userid) == "0" {
 		where =  map[string]interface{}{
 			"dtime": 0,

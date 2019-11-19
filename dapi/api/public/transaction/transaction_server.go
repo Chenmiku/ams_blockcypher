@@ -41,11 +41,11 @@ func StrToInt(s string) int {
 
 // send, receive coin api
 func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
-	//sender := r.URL.Query().Get("sender")
+	sender := r.URL.Query().Get("sender")
 	receiver := r.URL.Query().Get("receiver")
 	value := StrToInt(r.URL.Query().Get("value"))
 	coinType := r.URL.Query().Get("coin_type")
-	if strconv.Itoa(value) == "" || value == 0  || receiver == "" {  //|| sender == "" {
+	if strconv.Itoa(value) == "0" || value == 0  || receiver == "" || sender == "" {
 		s.SendError(w, web.ErrBadRequest)
 		return
 	}
@@ -55,15 +55,14 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	var txOutput = &transaction_output.TransactionOutput{}
 	var txInputs = []transaction_input.TransactionInput{}
 	var txOutputs = []transaction_output.TransactionOutput{}
-	//var sendAddr = &private_address.PrivateAddress{}
 
-	// sendAddr, err := address.GetByAddress(sender)
-	// if err != nil {
-	// 	s.ErrorMessage(w, "address_not_found")
-	// 	return
-	// }
+	sendAddr, err := address.GetByAddress(sender)
+	if err != nil {
+		s.ErrorMessage(w, "address_not_found")
+		return
+	}
 
-	_, err := address.GetByAddress(receiver)
+	_, err = address.GetByAddress(receiver)
 	if err != nil {
 		s.ErrorMessage(w, "address_not_found")
 		return
@@ -71,47 +70,48 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 
 	switch coinType {
 	case "btc":
-		config.CoinType = "bcy"
+		config.CoinType = "btc"
 	case "eth":
-		config.CoinType = "beth"
+		config.CoinType = "eth"
 	case "":
 		config.CoinType = "btc"
 	}
 
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
-	// check fund
-	// addr, err := btc.GetAddrBal(sender, nil)
+	//check fund
+	addr, err := btc.GetAddrBal(sender, nil)
+	if err != nil {
+		s.ErrorMessage(w, err.Error())
+		return
+	}
+	if addr.Balance == 0 || addr.Balance < value {
+		s.ErrorMessage(w, "not_enough_fund")
+		return
+	}
+
+	// Generate address 
+	// addr, err := btc.GenAddrKeychain()
 	// if err != nil {
 	// 	s.ErrorMessage(w, err.Error())
 	// 	return
 	// }
-	// if addr.Balance == 0 || addr.Balance < value {
-	// 	s.ErrorMessage(w, "not_enough_fund")
+	// fmt.Println(addr.Address)
+	//faucet, only use for test
+	// _, err = btc.Faucet(addr, 1000000000000000000)
+	// if err != nil {
+	// 	s.ErrorMessage(w, err.Error())
 	// 	return
 	// }
+	// fmt.Println("faucet")
 
-	// Generate address 
-	addr, err := btc.GenAddrKeychain()
-	if err != nil {
-		s.ErrorMessage(w, err.Error())
-		return
-	}
-	fmt.Println(addr.Address)
-
-	//faucet, only use for test
-	_, err = btc.Faucet(addr, 1000000000000000000)
-	if err != nil {
-		s.ErrorMessage(w, err.Error())
-		return
-	}
 	// create new transaction
-	skel, err := btc.NewTX(gobcy.TempNewTX(addr.Address, receiver, value), false)
+	skel, err := btc.NewTX(gobcy.TempNewTX(sendAddr.Addr, receiver, value), false)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
 		return
 	}
 	//sign it
-	err = skel.Sign([]string{addr.Private})
+	err = skel.Sign([]string{sendAddr.PrivateKey})
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
 		return
@@ -184,7 +184,7 @@ func (s *TransactionServer) HandleDeposit(w http.ResponseWriter, r *http.Request
 	receiver := r.URL.Query().Get("receiver")
 	value := StrToInt(r.URL.Query().Get("value"))
 	coinType := r.URL.Query().Get("coin_type")
-	if strconv.Itoa(value) == "" || value == 0 || sender == "" || privateKey == "" || receiver == "" {
+	if strconv.Itoa(value) == "0" || value == 0 || sender == "" || privateKey == "" || receiver == "" {
 		s.SendError(w, web.ErrBadRequest)
 		return
 	}
@@ -320,7 +320,7 @@ func (s *TransactionServer) HandleWithDraw(w http.ResponseWriter, r *http.Reques
 	receiver := r.URL.Query().Get("receiver")
 	value := StrToInt(r.URL.Query().Get("value"))
 	coinType := r.URL.Query().Get("coin_type")
-	if strconv.Itoa(value) == "" || value == 0 || sender == "" || receiver == "" {
+	if strconv.Itoa(value) == "0" || value == 0 || sender == "" || receiver == "" {
 		s.SendError(w, web.ErrBadRequest)
 		return
 	}
@@ -463,9 +463,9 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 
 	switch coinType {
 	case "btc":
-		config.CoinType = "bcy"
+		config.CoinType = "btc"
 	case "eth":
-		config.CoinType = "beth"
+		config.CoinType = "eth"
 	case "":
 		config.CoinType = "btc"
 	}
