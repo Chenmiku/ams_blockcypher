@@ -33,6 +33,7 @@ type Transaction struct {
 	PublicKeys         []string `bson:"public_keys,omitempty" json:"public_keys"`
 	GasUsed 		   int    `bson:"gas_used,omitempty" json:"gas_used"` // for ether
 	GasPrice 		   int    `bson:"gas_price,omitempty" json:"gas_price"` // for ether
+	GasLimit		   int	  `bson:"gas_limit,omitempty" json:"gas_limit"` // for ether
 	ContractCreation   bool    `bson:"contract_creation,omitempty" json:"contract_creation"` // for ether
 	CTime              int64    `bson:"ctime,omitempty" json:"ctime"` // Create Time
 }

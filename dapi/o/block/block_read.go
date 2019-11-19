@@ -15,7 +15,7 @@ func GetByHash(hash string) (*Block, error) {
 	}, &w)
 }
 
-// func GetAllByWalletID(pageSize int, pageNumber int, sortBy string, sortOrder string, walletid string, pubaddress *[]PublicAddress) (int, error) {
+// func GetAllByWalletID(pageSize int, pageNumber int, sortBy string, sortOrder string, walletid string, pubaddress *[]Address) (int, error) {
 // 	var where map[string]interface{}
 // 	if walletid == "" {
 // 		where =  map[string]interface{}{
@@ -29,5 +29,5 @@ func GetByHash(hash string) (*Block, error) {
 // 	}
 
 // 	exclude := []string{}
-// 	return TablePublicAddress.ReadPagingSortWithExclude(where, pageSize, pageNumber, sortBy, sortOrder, pubaddress, exclude)
+// 	return TableAddress.ReadPagingSortWithExclude(where, pageSize, pageNumber, sortBy, sortOrder, pubaddress, exclude)
 // }

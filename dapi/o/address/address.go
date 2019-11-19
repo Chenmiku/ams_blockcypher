@@ -1,18 +1,16 @@
-package public_address
+package address
 
 import (
 	"ams_system/dapi/x/mlog"
 	"db/mgo"
 )
 
-var objectPrivateAddressLog = mlog.NewTagLog("object_public_address")
+var objectAddressLog = mlog.NewTagLog("object_address")
 
-//PublicAddress
-type PublicAddress struct {
+//Address
+type Address struct {
 	mgo.BaseModel          `bson:",inline"`
-	Address                string `bson:"address,omitempty" json:"address"`
-	WalletID               string `bson:"wallet_id,omitempty" json:"wallet_id"`
-	WalletName      	   string `bson:"wallet_name,omitempty" json:"wallet_name"`
+	Addr                   string `bson:"addr,omitempty" json:"addr"`
 	TotalRevceived         int    `bson:"total_revceived,omitempty" json:"total_revceived"`
 	TotalSent              int    `bson:"total_sent,omitempty" json:"total_sent"`
 	Balance                int    `bson:"balance,omitempty" json:"balance"`
@@ -22,9 +20,13 @@ type PublicAddress struct {
 	ConfirmedTransaction   int    `bson:"confirmed_transaction,omitempty" json:"confirmed_transaction"`
 	UnconfirmedTransaction int    `bson:"unconfirmed_transaction,omitempty" json:"unconfirmed_transaction"`
 	FinalTransaction       int    `bson:"final_transaction,omitempty" json:"final_transaction"`
+	PublicKey              string `bson:"public_key,omitempty" json:"public_key"`
+	PrivateKey             string `bson:"private_key,omitempty" json:"private_key"`
+	Wif                    string `bson:"wif,omitempty" json:"wif"`
+	UserID                 int    `bson:"user_id,omitempty" json:"user_id"`
 	CTime                  int64  `bson:"ctime,omitempty" json:"ctime"` // Create Time
 }
 
-func NewCleanPublicAddress() interface{} {
-	return &PublicAddress{}
+func NewCleanAddress() interface{} {
+	return &Address{}
 }

@@ -3,8 +3,7 @@ package transaction
 import (
 	"ams_system/dapi/o/transaction_input"
 	"ams_system/dapi/o/transaction_output"
-	"ams_system/dapi/o/private_address"
-	"ams_system/dapi/o/public_address"
+	"ams_system/dapi/o/address"
 	"ams_system/dapi/o/transaction"
 	"fmt"
 	"http/web"
@@ -42,11 +41,11 @@ func StrToInt(s string) int {
 
 // send, receive coin api
 func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
-	sender := r.URL.Query().Get("sender")
+	//sender := r.URL.Query().Get("sender")
 	receiver := r.URL.Query().Get("receiver")
 	value := StrToInt(r.URL.Query().Get("value"))
 	coinType := r.URL.Query().Get("coin_type")
-	if strconv.Itoa(value) == "" || value == 0 || sender == "" || receiver == "" {
+	if strconv.Itoa(value) == "" || value == 0  || receiver == "" {  //|| sender == "" {
 		s.SendError(w, web.ErrBadRequest)
 		return
 	}
@@ -56,15 +55,15 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	var txOutput = &transaction_output.TransactionOutput{}
 	var txInputs = []transaction_input.TransactionInput{}
 	var txOutputs = []transaction_output.TransactionOutput{}
-	var sendAddr = &private_address.PrivateAddress{}
+	//var sendAddr = &private_address.PrivateAddress{}
 
-	sendAddr, err := private_address.GetByAddress(sender)
-	if err != nil {
-		s.ErrorMessage(w, "address_not_found")
-		return
-	}
+	// sendAddr, err := address.GetByAddress(sender)
+	// if err != nil {
+	// 	s.ErrorMessage(w, "address_not_found")
+	// 	return
+	// }
 
-	_, err = private_address.GetByAddress(receiver)
+	_, err := address.GetByAddress(receiver)
 	if err != nil {
 		s.ErrorMessage(w, "address_not_found")
 		return
@@ -72,35 +71,47 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 
 	switch coinType {
 	case "btc":
-		config.CoinType = "btc"
+		config.CoinType = "bcy"
 	case "eth":
-		config.CoinType = "eth"
+		config.CoinType = "beth"
 	case "":
 		config.CoinType = "btc"
 	}
+
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
-
 	// check fund
-	addr, err := btc.GetAddrBal(sender, nil)
-	if addr.Balance == 0 || addr.Balance < value {
-		s.ErrorMessage(w, "not_enough_fund")
-		return
-	}
-
-	// faucet, only use for test
-	// _, err = btc.Faucet(addr, 300000)
+	// addr, err := btc.GetAddrBal(sender, nil)
 	// if err != nil {
-	// 	fmt.Println(err)
+	// 	s.ErrorMessage(w, err.Error())
+	// 	return
+	// }
+	// if addr.Balance == 0 || addr.Balance < value {
+	// 	s.ErrorMessage(w, "not_enough_fund")
+	// 	return
 	// }
 
+	// Generate address 
+	addr, err := btc.GenAddrKeychain()
+	if err != nil {
+		s.ErrorMessage(w, err.Error())
+		return
+	}
+	fmt.Println(addr.Address)
+
+	//faucet, only use for test
+	_, err = btc.Faucet(addr, 1000000000000000000)
+	if err != nil {
+		s.ErrorMessage(w, err.Error())
+		return
+	}
 	// create new transaction
-	skel, err := btc.NewTX(gobcy.TempNewTX(sender, receiver, value), false)
+	skel, err := btc.NewTX(gobcy.TempNewTX(addr.Address, receiver, value), false)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
 		return
 	}
 	//sign it
-	err = skel.Sign([]string{sendAddr.PrivateKey})
+	err = skel.Sign([]string{addr.Private})
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
 		return
@@ -183,10 +194,9 @@ func (s *TransactionServer) HandleDeposit(w http.ResponseWriter, r *http.Request
 	var txOutput = &transaction_output.TransactionOutput{}
 	var txInputs = []transaction_input.TransactionInput{}
 	var txOutputs = []transaction_output.TransactionOutput{}
-	var sendAddr = &private_address.PrivateAddress{}
-	var sendPubAddr = &public_address.PublicAddress{}
+	var sendAddr = &address.Address{}
 
-	_, err := private_address.GetByAddress(receiver)
+	_, err := address.GetByAddress(receiver)
 	if err != nil {
 		s.ErrorMessage(w, "address_not_found")
 		return
@@ -200,9 +210,14 @@ func (s *TransactionServer) HandleDeposit(w http.ResponseWriter, r *http.Request
 	case "":
 		config.CoinType = "btc"
 	}
+
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	// check fund
 	addr, err := btc.GetAddrBal(sender, nil)
+	if err != nil {
+		s.ErrorMessage(w, err.Error())
+		return
+	}
 	if addr.Balance == 0 || addr.Balance < value {
 		s.ErrorMessage(w, "not_enough_fund")
 		return
@@ -228,30 +243,18 @@ func (s *TransactionServer) HandleDeposit(w http.ResponseWriter, r *http.Request
 	fmt.Println("success")
 
 	// add sender address to db
-	senderAddr, err := btc.GetAddrBal(sender, nil)
+	_, err = address.GetByAddress(sender)
 	if err != nil {
-		s.ErrorMessage(w, err.Error())
-		return
-	}
-	_, err = private_address.GetByAddress(sender)
-	if err != nil {
-		sendAddr.Address = sender
+		sendAddr.Addr = sender
+		sendAddr.Balance = addr.Balance
+		sendAddr.FinalBalance = addr.FinalBalance
+		sendAddr.FinalTransaction = addr.FinalNumTX
+		sendAddr.TotalRevceived = addr.TotalReceived
+		sendAddr.TotalSent = addr.TotalSent
+		sendAddr.UnconfirmedBalance = addr.UnconfirmedBalance
+		sendAddr.UnconfirmedTransaction = addr.UnconfirmedNumTX
+		sendAddr.ConfirmedTransaction = addr.NumTX
 		err = sendAddr.Create()
-		if err != nil {
-			s.ErrorMessage(w, err.Error())
-			return
-		}
-
-		sendPubAddr.Address = sender
-		sendPubAddr.Balance = senderAddr.Balance
-		sendPubAddr.FinalBalance = senderAddr.FinalBalance
-		sendPubAddr.FinalTransaction = senderAddr.FinalNumTX
-		sendPubAddr.TotalRevceived = senderAddr.TotalReceived
-		sendPubAddr.TotalSent = senderAddr.TotalSent
-		sendPubAddr.UnconfirmedBalance = senderAddr.UnconfirmedBalance
-		sendPubAddr.UnconfirmedTransaction = senderAddr.UnconfirmedNumTX
-		sendPubAddr.ConfirmedTransaction = senderAddr.NumTX
-		err = sendPubAddr.Create()
 		if err != nil {
 			s.ErrorMessage(w, err.Error())
 			return
@@ -327,10 +330,9 @@ func (s *TransactionServer) HandleWithDraw(w http.ResponseWriter, r *http.Reques
 	var txOutput = &transaction_output.TransactionOutput{}
 	var txInputs = []transaction_input.TransactionInput{}
 	var txOutputs = []transaction_output.TransactionOutput{}
-	var receiveAddr = &private_address.PrivateAddress{}
-	var receivePubAddr = &public_address.PublicAddress{}
+	var receiveAddr = &address.Address{}
 
-	sendAddr, err := private_address.GetByAddress(sender)
+	sendAddr, err := address.GetByAddress(sender)
 	if err != nil {
 		s.ErrorMessage(w, "address_not_found")
 		return
@@ -344,6 +346,7 @@ func (s *TransactionServer) HandleWithDraw(w http.ResponseWriter, r *http.Reques
 	case "":
 		config.CoinType = "btc"
 	}
+
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	// check fund
 	addr, err := btc.GetAddrBal(sender, nil)
@@ -377,25 +380,18 @@ func (s *TransactionServer) HandleWithDraw(w http.ResponseWriter, r *http.Reques
 		s.ErrorMessage(w, err.Error())
 		return
 	}
-	_, err = private_address.GetByAddress(receiver)
+	_, err = address.GetByAddress(receiver)
 	if err != nil {
-		receiveAddr.Address = receiver
+		receiveAddr.Addr = receiver
+		receiveAddr.Balance = receiverAddr.Balance
+		receiveAddr.FinalBalance = receiverAddr.FinalBalance
+		receiveAddr.FinalTransaction = receiverAddr.FinalNumTX
+		receiveAddr.TotalRevceived = receiverAddr.TotalReceived
+		receiveAddr.TotalSent = receiverAddr.TotalSent
+		receiveAddr.UnconfirmedBalance = receiverAddr.UnconfirmedBalance
+		receiveAddr.UnconfirmedTransaction = receiverAddr.UnconfirmedNumTX
+		receiveAddr.ConfirmedTransaction = receiverAddr.NumTX
 		err = receiveAddr.Create()
-		if err != nil {
-			s.ErrorMessage(w, err.Error())
-			return
-		}
-
-		receivePubAddr.Address = receiver
-		receivePubAddr.Balance = receiverAddr.Balance
-		receivePubAddr.FinalBalance = receiverAddr.FinalBalance
-		receivePubAddr.FinalTransaction = receiverAddr.FinalNumTX
-		receivePubAddr.TotalRevceived = receiverAddr.TotalReceived
-		receivePubAddr.TotalSent = receiverAddr.TotalSent
-		receivePubAddr.UnconfirmedBalance = receiverAddr.UnconfirmedBalance
-		receivePubAddr.UnconfirmedTransaction = receiverAddr.UnconfirmedNumTX
-		receivePubAddr.ConfirmedTransaction = receiverAddr.NumTX
-		err = receivePubAddr.Create()
 		if err != nil {
 			s.ErrorMessage(w, err.Error())
 			return
@@ -459,7 +455,6 @@ func (s *TransactionServer) HandleWithDraw(w http.ResponseWriter, r *http.Reques
 func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *http.Request) {
 	hash := r.URL.Query().Get("hash")
 	coinType := r.URL.Query().Get("coin_type")
-	var u = &transaction.Transaction{}
 	u, err := transaction.GetByHash(hash)
 	if err != nil {
 		s.ErrorMessage(w, "transaction_not_found")
@@ -468,26 +463,23 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 
 	switch coinType {
 	case "btc":
-		config.CoinType = "btc"
+		config.CoinType = "bcy"
 	case "eth":
-		config.CoinType = "eth"
+		config.CoinType = "beth"
 	case "":
 		config.CoinType = "btc"
 	}
+
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	// check exists transaction
-	_, err = btc.GetTX(hash, nil)
-    if err != nil {
-        s.ErrorMessage(w, "transaction_not_found")
-		return
-    }
 	trans, err := btc.GetTX(hash, nil)
 	if err != nil {
-		s.ErrorMessage(w, err.Error())
+		s.ErrorMessage(w, "transaction_not_found")
 		return
 	}
 
 	if trans.Confirmations > 0 {
+		// update transaction on db
 		u.Hash = trans.Hash
 		u.BlockHeight = trans.BlockHeight
 		u.BlockHash = trans.BlockHash
