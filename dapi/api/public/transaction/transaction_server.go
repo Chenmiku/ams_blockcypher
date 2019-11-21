@@ -123,6 +123,7 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println("success")
+	fmt.Println(skel.Trans)
 
 	// create txoutput on db
 	txO := skel.Trans.Outputs
@@ -168,7 +169,11 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	u.ToSign = skel.ToSign
 	u.Signatures = skel.Signatures
 	u.PublicKeys = skel.PubKeys
-
+	// if config.CoinType == "eth" {
+	// 	u.GasUsed = skel.Trans.GasUsed
+	// 	u.GasPrice = skel.Trans.GasPrice
+	// 	u.GasLimit = skel.Trans.GasLimit
+	// }
 	err = u.Create()
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
@@ -241,6 +246,7 @@ func (s *TransactionServer) HandleDeposit(w http.ResponseWriter, r *http.Request
 		return
 	}
 	fmt.Println("success")
+	fmt.Println(skel.Trans)
 
 	// add sender address to db
 	_, err = address.GetByAddress(sender)
@@ -305,6 +311,11 @@ func (s *TransactionServer) HandleDeposit(w http.ResponseWriter, r *http.Request
 	u.ToSign = skel.ToSign
 	u.Signatures = skel.Signatures
 	u.PublicKeys = skel.PubKeys
+	// if config.CoinType == "eth" {
+	// 	u.GasUsed = skel.Trans.GasUsed
+	// 	u.GasPrice = skel.Trans.GasPrice
+	// 	u.GasLimit = skel.Trans.GasLimit
+	// }
 
 	err = u.Create()
 	if err != nil {
@@ -350,6 +361,10 @@ func (s *TransactionServer) HandleWithDraw(w http.ResponseWriter, r *http.Reques
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	// check fund
 	addr, err := btc.GetAddrBal(sender, nil)
+	if err != nil {
+		s.ErrorMessage(w, err.Error())
+		return
+	}
 	if addr.Balance == 0 || addr.Balance < value {
 		s.ErrorMessage(w, "not_enough_fund")
 		return
@@ -373,6 +388,7 @@ func (s *TransactionServer) HandleWithDraw(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	fmt.Println("success")
+	fmt.Println(skel.Trans)
 
 	// add receiver address to db
 	receiverAddr, err := btc.GetAddrBal(receiver, nil)
@@ -442,6 +458,11 @@ func (s *TransactionServer) HandleWithDraw(w http.ResponseWriter, r *http.Reques
 	u.ToSign = skel.ToSign
 	u.Signatures = skel.Signatures
 	u.PublicKeys = skel.PubKeys
+	// if config.CoinType == "eth" {
+	// 	u.GasUsed = skel.Trans.GasUsed
+	// 	u.GasPrice = skel.Trans.GasPrice
+	// 	u.GasLimit = skel.Trans.GasLimit
+	// }
 
 	err = u.Create()
 	if err != nil {
@@ -493,7 +514,11 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 		u.InputsTransaction = trans.VinSize
 		u.OutputsTransaction = trans.VoutSize
 		u.Addresses = trans.Addresses
-		u.IsCoinBase = false
+		// if config.CoinType == "eth" {
+		// 	u.GasUsed = trans.GasUsed
+		// 	u.GasPrice = trans.GasPrice
+		// 	u.GasLimit = trans.GasLimit
+		// }
 		err = u.UpdateById(u)
 		if err != nil {
 			s.ErrorMessage(w, err.Error())

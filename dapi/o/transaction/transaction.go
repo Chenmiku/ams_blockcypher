@@ -26,7 +26,6 @@ type Transaction struct {
 	OutputsTransaction int    `bson:"outputs_transaction,omitempty" json:"outputs_transaction"`
 	Inputs             []transaction_input.TransactionInput	`bson:"inputs,omitempty" json:"inputs"`
 	Outputs            []transaction_output.TransactionOutput `bson:"outputs,omitempty" json:"outputs"`
-	IsCoinBase         bool     `bson:"is_coinbase,omitempty" json:"is_coinbase"`
 	Addresses          []string `bson:"addresses,omitempty" json:"addresses"`
 	ToSign             []string `bson:"to_sign,omitempty" json:"to_sign"`
 	Signatures         []string `bson:"signatures,omitempty" json:"signatures"`
@@ -34,7 +33,6 @@ type Transaction struct {
 	GasUsed 		   int    `bson:"gas_used,omitempty" json:"gas_used"` // for ether
 	GasPrice 		   int    `bson:"gas_price,omitempty" json:"gas_price"` // for ether
 	GasLimit		   int	  `bson:"gas_limit,omitempty" json:"gas_limit"` // for ether
-	ContractCreation   bool    `bson:"contract_creation,omitempty" json:"contract_creation"` // for ether
 	CTime              int64    `bson:"ctime,omitempty" json:"ctime"` // Create Time
 }
 
