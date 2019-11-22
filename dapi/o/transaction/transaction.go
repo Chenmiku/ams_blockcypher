@@ -14,7 +14,7 @@ type Transaction struct {
 	mgo.BaseModel      `bson:",inline"`
 	Hash               string `bson:"hash,omitempty" json:"hash"`
 	TotalExchanged     int    `bson:"total_exchanged,omitempty" json:"total_exchanged"`
-	Fees               int    `bson:"fees,omitempty" json:"fess"`
+	Fees               int    `bson:"fees,omitempty" json:"fees"`
 	Size               int    `bson:"size,omitempty" json:"size"`
 	Version            int    `bson:"version,omitempty" json:"version"`
 	DoubleSpend        bool   `bson:"double_spend,omitempty" json:"double_spend"`

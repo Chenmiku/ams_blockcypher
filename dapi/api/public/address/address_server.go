@@ -2,6 +2,7 @@ package address
 
 import (
 	"ams_system/dapi/o/address"
+	"ams_system/dapi/o/addresskey"
 	"http/web"
 	"net/http"
 	"strconv"
@@ -23,8 +24,7 @@ func NewAddressServer() *AddressServer {
 	s.HandleFunc("/get_all", s.HandleGetAll) 
 	s.HandleFunc("/generate", s.HandleCreate) 
 	s.HandleFunc("/get_by_address", s.HandleGetByAddress) 
-	s.HandleFunc("/update", s.HandleUpdateByID)
-	s.HandleFunc("/balance", s.HandleBalance) 
+	s.HandleFunc("/update", s.HandleUpdateByID) 
 	s.HandleFunc("/mark_delete", s.HandleMarkDelete)
 	return s
 }
@@ -63,6 +63,7 @@ func(s *AddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	var u = &address.Address{}
+	var uKey = &addresskey.AddressKey{}
 
 	switch coinType {
 	case "btc":
@@ -80,10 +81,17 @@ func(s *AddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	uKey.Addr = addrKeys.Address
+	uKey.PublicKey = addrKeys.Public
+	uKey.PrivateKey = addrKeys.Private
+	uKey.Wif = addrKeys.Wif
+	err = uKey.Create()
+	if err != nil {
+		s.ErrorMessage(w, err.Error())
+		return
+	}
+
 	u.Addr = addrKeys.Address
-	u.PublicKey = addrKeys.Public
-	u.PrivateKey = addrKeys.Private
-	u.Wif = addrKeys.Wif
 	u.CoinType = config.CoinType
 	u.UserID = userid
 	err = u.Create()
@@ -91,6 +99,51 @@ func(s *AddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		s.ErrorMessage(w, err.Error())
 	} else {
 		s.SendDataSuccess(w, u)
+	}
+}
+
+// balance and get address's infor api
+func (s *AddressServer) HandleGetByAddress(w http.ResponseWriter, r *http.Request) {
+	addr := r.URL.Query().Get("addr")
+	coinType := r.URL.Query().Get("coin_type")
+
+	// check coin type
+	switch coinType {
+	case "btc":
+		config.CoinType = "btc"
+	case "eth":
+		config.CoinType = "eth"
+	case "":
+		config.CoinType = "btc"
+	}
+
+	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
+	addre, err := btc.GetAddrBal(addr, nil)
+	if err != nil {
+		s.ErrorMessage(w, err.Error())
+		return
+	}
+
+	ad, err := address.GetByAddress(addr)
+	if err != nil { 
+		s.ErrorMessage(w, err.Error())
+		return
+	}
+	ad.CoinType = config.CoinType
+	ad.TotalRevceived = addre.TotalReceived
+	ad.TotalSent = addre.TotalSent
+	ad.Balance = addre.Balance
+	ad.UnconfirmedBalance = addre.UnconfirmedBalance
+	ad.FinalBalance = addre.FinalBalance
+	ad.ConfirmedTransaction = addre.NumTX
+	ad.UnconfirmedTransaction = addre.UnconfirmedNumTX
+	ad.FinalTransaction = addre.FinalNumTX
+
+	err = ad.UpdateById(ad)
+	if err != nil {
+		s.ErrorMessage(w, err.Error())
+	} else {
+		s.SendDataSuccess(w, ad)
 	}
 }
 
@@ -124,79 +177,6 @@ func (s *AddressServer) HandleUpdateByID(w http.ResponseWriter, r *http.Request)
 		}
 		s.SendDataSuccess(w, result)
 	}
-}
-
-// balance address api
-func (s *AddressServer) HandleBalance(w http.ResponseWriter, r *http.Request) {
-	addr := r.URL.Query().Get("addr")
-	coinType := r.URL.Query().Get("coin_type")
-	var priAddress = &address.Address{}
-
-	// check coin type
-	switch coinType {
-	case "btc":
-		config.CoinType = "btc"
-	case "eth":
-		config.CoinType = "eth"
-	case "":
-		config.CoinType = "btc"
-	}
-
-	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
-	addre, err := btc.GetAddrBal(addr, nil)
-	if err != nil {
-		s.ErrorMessage(w, err.Error())
-		return
-	}
-
-	ad, err := address.GetByAddress(addr)
-	ad.CoinType = config.CoinType
-	ad.TotalRevceived = addre.TotalReceived
-	ad.TotalSent = addre.TotalSent
-	ad.Balance = addre.Balance
-	ad.UnconfirmedBalance = addre.UnconfirmedBalance
-	ad.FinalBalance = addre.FinalBalance
-	ad.ConfirmedTransaction = addre.NumTX
-	ad.UnconfirmedTransaction = addre.UnconfirmedNumTX
-	ad.FinalTransaction = addre.FinalNumTX
-	if err != nil {
-		// create address balance
-		priAddress.Addr = addr
-		priAddress.CoinType = config.CoinType
-		priAddress.TotalRevceived = addre.TotalReceived
-		priAddress.TotalSent = addre.TotalSent
-		priAddress.Balance = addre.Balance
-		priAddress.UnconfirmedBalance = addre.UnconfirmedBalance
-		priAddress.FinalBalance = addre.FinalBalance
-		priAddress.ConfirmedTransaction = addre.NumTX
-		priAddress.UnconfirmedTransaction = addre.UnconfirmedNumTX
-		priAddress.FinalTransaction = addre.FinalNumTX
-		err = priAddress.Create()
-		if err != nil {
-			s.ErrorMessage(w, err.Error())
-		} else {
-			s.SendDataSuccess(w, priAddress)
-		}
-	} else {
-		// update public address balance
-		err = ad.UpdateById(ad)
-		if err != nil {
-			s.ErrorMessage(w, err.Error())
-		} else {
-			s.SendDataSuccess(w, ad)
-		}
-	}
-}
-
-// Get address by address api
-func (s *AddressServer) HandleGetByAddress(w http.ResponseWriter, r *http.Request) {
-	addr := r.URL.Query().Get("addr")
-	u, err := address.GetByAddress(addr)
-	if err != nil {
-		s.ErrorMessage(w, "address_not_found")
-		return
-	}
-	s.SendDataSuccess(w, u)
 }
 
 // delete address api

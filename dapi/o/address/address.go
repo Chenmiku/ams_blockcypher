@@ -20,9 +20,6 @@ type Address struct {
 	ConfirmedTransaction   int    `bson:"confirmed_transaction,omitempty" json:"confirmed_transaction"`
 	UnconfirmedTransaction int    `bson:"unconfirmed_transaction,omitempty" json:"unconfirmed_transaction"`
 	FinalTransaction       int    `bson:"final_transaction,omitempty" json:"final_transaction"`
-	PublicKey              string `bson:"public_key,omitempty" json:"public_key"`
-	PrivateKey             string `bson:"private_key,omitempty" json:"private_key"`
-	Wif                    string `bson:"wif,omitempty" json:"wif"`
 	UserID                 int    `bson:"user_id,omitempty" json:"user_id"`
 	CTime                  int64  `bson:"ctime,omitempty" json:"ctime"` // Create Time
 }
