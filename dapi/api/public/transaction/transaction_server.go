@@ -21,9 +21,13 @@ type TransactionServer struct {
 	*http.ServeMux
 }
 
-type DepositStateResult struct {
+type DepositStateByAddressResult struct {
 	CoinType  string `json:"coin_type"`
 	CoinValue int `json:"coin_value"`
+	Confirm	  bool 	`json:"confirm"`
+	Message	  string 	`json:"message"`
+}
+type DepositStateResult struct {
 	Confirm	  bool 	`json:"confirm"`
 	Message	  string 	`json:"message"`
 }
@@ -208,6 +212,10 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 			}
 			break
 		}
+
+		if i == 20 {
+			break
+		}
 	}
 
 	// balance
@@ -234,7 +242,22 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			s.SendSuccessMessage(w, "transaction_confirmed", true)
+			// send response
+			result := &DepositStateResult{}
+			result.Confirm = true
+			result.Message = "transaction_confirmed"
+	
+			s.SendDataSuccess(w, result)
+			break
+		}
+
+		if i == 20 {
+			// send response
+			result := &DepositStateResult{}
+			result.Confirm = false
+			result.Message = "no_transaction"
+	
+			s.SendDataSuccess(w, result)
 			break
 		}
 	}
@@ -294,7 +317,23 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 					return
 				}
 			}
-			s.SendSuccessMessage(w, "transaction_confirmed", true)
+
+			// send response
+			result := &DepositStateResult{}
+			result.Confirm = true
+			result.Message = "transaction_confirmed"
+	
+			s.SendDataSuccess(w, result)
+			break
+		}
+
+		if i == 20 {
+			// send response
+			result := &DepositStateResult{}
+			result.Confirm = false
+			result.Message = "no_transaction"
+	
+			s.SendDataSuccess(w, result)
 			break
 		}
 	}
@@ -353,7 +392,7 @@ func (s *TransactionServer) HandleCheckDepositStateByAddress(w http.ResponseWrit
 			}
 
 			// send response
-			result := &DepositStateResult{}
+			result := &DepositStateByAddressResult{}
 			result.CoinType = config.CoinType
 			result.CoinValue = coinValue
 			result.Confirm = confirm
@@ -362,6 +401,18 @@ func (s *TransactionServer) HandleCheckDepositStateByAddress(w http.ResponseWrit
 			s.SendDataSuccess(w, result)
 			break
 		}
+
+		if i == 20 {
+			// send response
+			result := &DepositStateByAddressResult{}
+			result.CoinType = config.CoinType
+			result.CoinValue = 0
+			result.Confirm = false
+			result.Message = "no_transaction"
+	
+			s.SendDataSuccess(w, result)
+			break
+		} 
 	}
 }
 

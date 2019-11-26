@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"github.com/blockcypher/gobcy"
 	"ams_system/dapi/config"
+	"fmt"
 )
 
 type AddressServer struct {
@@ -97,6 +98,7 @@ func(s *AddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	u.Balance = 0
 	err = u.Create()
 	if err != nil {
+		fmt.Println("create address success")
 		s.ErrorMessage(w, err.Error())
 	} else {
 		s.SendDataSuccess(w, u)
