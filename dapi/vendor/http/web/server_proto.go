@@ -76,14 +76,6 @@ func (s *JsonServer) SendJson(w http.ResponseWriter, v interface{}) {
 	s.sendJson(w, v)
 }
 
-func (s *JsonServer) SendData(w http.ResponseWriter, v interface{}) {
-	w.Header().Add("Content-Type", "application/json")
-	s.sendJson(w, map[string]interface{}{
-		"success": true,
-		"data":   v,
-	})
-}
-
 func (s *JsonServer) SendDataSuccess(w http.ResponseWriter, v interface{}) {
 	w.Header().Add("Content-Type", "application/json")
 	s.sendJson(w, map[string]interface{}{
@@ -102,7 +94,7 @@ func (s *JsonServer) SendSuccessMessage(w http.ResponseWriter, message string, c
 }
 
 func (s *JsonServer) Success(w http.ResponseWriter) {
-	s.SendData(w, nil)
+	s.SendDataSuccess(w, nil)
 }
 
 func (s *JsonServer) ErrorMessage(w http.ResponseWriter, message string) {
@@ -118,7 +110,7 @@ func (s *JsonServer) Send(w http.ResponseWriter, data interface{}, err ...error)
 		s.SendError(w, err[0])
 		return
 	}
-	s.SendData(w, data)
+	s.SendDataSuccess(w, data)
 }
 
 func (s *JsonServer) DecodeBody(r *http.Request, v interface{}) error {

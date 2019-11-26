@@ -30,7 +30,7 @@ func (uapi *userAPI) handleCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		uapi.ErrorMessage(w, err.Error())
 	} else {
-		uapi.SendData(w, u)
+		uapi.SendDataSuccess(w, u)
 	}
 }
 

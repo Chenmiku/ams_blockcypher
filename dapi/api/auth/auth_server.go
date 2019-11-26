@@ -70,7 +70,7 @@ func (s *AuthServer) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var ses = session.MustNew(u)
-	s.SendData(w, map[string]interface{}{
+	s.SendDataSuccess(w, map[string]interface{}{
 		"user":  u,
 		"token": "Bearer" + ses.ID,
 	})
@@ -79,7 +79,7 @@ func (s *AuthServer) HandleLogin(w http.ResponseWriter, r *http.Request) {
 // logout api
 func (s *AuthServer) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	session.MustClear(r)
-	s.SendData(w, nil)
+	s.SendDataSuccess(w, nil)
 }
 
 // Change pass api 
@@ -107,7 +107,7 @@ func (s *AuthServer) handleChangePass(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
 	} else {
-		s.SendData(w, map[string]interface{}{
+		s.SendDataSuccess(w, map[string]interface{}{
 			"status": "success",
 		})
 	}

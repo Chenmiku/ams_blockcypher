@@ -30,7 +30,7 @@ func (s *RoleServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	var u = &role.Role{}
 	s.MustDecodeBody(r, u)
 	web.AssertNil(u.Create())
-	s.SendData(w, u)
+	s.SendDataSuccess(w, u)
 }
 
 func (s *RoleServer) mustGetRole(r *http.Request) *role.Role {
@@ -46,13 +46,13 @@ func (s *RoleServer) HandleUpdateByID(w http.ResponseWriter, r *http.Request) {
 	s.MustDecodeBody(r, newRole)
 	var u = s.mustGetRole(r)
 	web.AssertNil(u.Update(newRole))
-	s.SendData(w, nil)
+	s.SendDataSuccess(w, nil)
 }
 
 // Get role by id api 
 func (s *RoleServer) HandleGetByID(w http.ResponseWriter, r *http.Request) {
 	var u = s.mustGetRole(r)
-	s.SendData(w, u)
+	s.SendDataSuccess(w, u)
 }
 
 // Delete role api
@@ -82,7 +82,7 @@ func (s *RoleServer) HandleAllRole(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.SendError(w, err)
 	} else {
-		s.SendData(w, map[string]interface{}{
+		s.SendDataSuccess(w, map[string]interface{}{
 			"roles": res,
 			"count": count,
 		})

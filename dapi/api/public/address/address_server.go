@@ -94,6 +94,7 @@ func(s *AddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	u.Addr = addrKeys.Address
 	u.CoinType = config.CoinType
 	u.UserID = userid
+	u.Balance = 0
 	err = u.Create()
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
