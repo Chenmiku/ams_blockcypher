@@ -11,3 +11,9 @@ func GetByAddress(address string) (*AddressKey, error) {
 	}, &w)
 }
 
+func GetAll(pageSize int, pageNumber int, sortBy string, sortOrder string, addressKey *[]AddressKey) (int, error) {
+	var where map[string]interface{}
+
+	exclude := []string{}
+	return TableAddressKey.ReadPagingSortWithExclude(where, pageSize, pageNumber, sortBy, sortOrder, addressKey, exclude)
+}

@@ -34,7 +34,7 @@ func StrToInt(s string) int {
 	return int(i)
 } 
 
-//get all public address api by user
+//get all address api by user
 func (s *AddressServer) HandleGetAll(w http.ResponseWriter, r *http.Request) {
 	userid := StrToInt(r.URL.Query().Get("user_id"))
 	sortBy := r.URL.Query().Get("sort_by")
