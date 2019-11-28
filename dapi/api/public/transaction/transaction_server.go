@@ -41,6 +41,7 @@ func NewTransactionServer() *TransactionServer {
 	s.HandleFunc("/send_to_polebit", s.HandleSend)                                                                                                  
 	s.HandleFunc("/check_deposit_state", s.HandleCheckDepositState) 
 	s.HandleFunc("/check_deposit_state_by_address", s.HandleCheckDepositStateByAddress) 
+	s.HandleFunc("/deposit_state_by_address", s.HandleDepositStateByAddress) 
 	s.HandleFunc("/get", s.HandleGetByHash)
 	return s
 }
@@ -56,7 +57,7 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	receiver := r.URL.Query().Get("receiver")
 	value := StrToInt(r.URL.Query().Get("value"))
 	coinType := r.URL.Query().Get("coin_type")
-	fmt.Println(value)
+	var fees int
 	if value == 0  || receiver == "" || sender == "" {
 		s.SendError(w, web.ErrBadRequest)
 		return
@@ -68,7 +69,7 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	var txInputs = []transaction_input.TransactionInput{}
 	var txOutputs = []transaction_output.TransactionOutput{}
 
-	ad, err := address.GetByAddress(sender)
+	_, err := address.GetByAddress(sender)
 	if err != nil {
 		s.ErrorMessage(w, "address_not_found")
 		return
@@ -89,9 +90,26 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	}
 
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
+	// set fees
+	chain, err := btc.GetChain()
+	if err != nil {
+		s.ErrorMessage(w, err.Error())
+		return
+	}
+	fmt.Printf("%+v\n", chain)
+
+	switch coinType {
+	case "btc":
+		fees = chain.HighFee
+	case "eth":
+		fees = chain.HighFee * 21000
+	case "":
+		fees = chain.HighFee
+	}
+
 	//check fund
 	addr, err := btc.GetAddrBal(sender, nil)
-	if addr.Balance == 0 || addr.Balance < value {
+	if addr.Balance == 0 || addr.Balance < value + fees {
 		s.ErrorMessage(w, "not_enough_fund")
 		return
 	}
@@ -118,8 +136,8 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 		s.ErrorMessage(w, err.Error())
 		return
 	}
-	fmt.Println("success")
-	fmt.Println(skel.Trans)
+
+	fmt.Printf("%+v\n", skel)
 
 	// create txoutput on db
 	txO := skel.Trans.Outputs
@@ -174,93 +192,13 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
 	} 
-	
-	// check confirm every 3 second
-	var x = 1200
-	for i:=0;i<x;i++ {
-		time.Sleep(3 * time.Second)
-		trans, err := btc.GetTX(u.Hash, nil)
-		if err != nil {
-			s.ErrorMessage(w, "transaction_not_found")
-			return
-		}
 
-		if trans.Confirmations > 0 {
-			// update transaction on db
-			u.Hash = trans.Hash
-			u.BlockHeight = trans.BlockHeight
-			u.BlockHash = trans.BlockHash
-			u.TotalBlock = trans.Confirmations
-			u.TotalExchanged = trans.Total
-			u.Fees = trans.Fees
-			u.Size = trans.Size
-			u.Version = trans.Ver
-			u.DoubleSpend = trans.DoubleSpend
-			u.ConfirmedTime = trans.Confirmed.Unix()
-			u.InputsTransaction = trans.VinSize
-			u.OutputsTransaction = trans.VoutSize
-			u.Addresses = trans.Addresses
-			// if config.CoinType == "eth" {
-			// 	u.GasUsed = trans.GasUsed
-			// 	u.GasPrice = trans.GasPrice
-			// 	u.GasLimit = trans.GasLimit
-			// }
-			err = u.UpdateById(u)
-			if err != nil {
-				s.ErrorMessage(w, err.Error())
-				return
-			}
-			break
-		}
+	// send response
+	result := &DepositStateResult{}
+	result.Confirm = false
+	result.Message = "transaction_pending"
 
-		if i == 20 {
-			break
-		}
-	}
-
-	// balance
-	for i:=0;i<x;i++ {
-		time.Sleep(3 * time.Second)
-		addre, err := btc.GetAddrBal(sender, nil)
-		if err != nil {
-			s.ErrorMessage(w, err.Error())
-			return
-		}
-
-		if ad.Balance != addre.Balance {
-			ad.TotalRevceived = addre.TotalReceived
-			ad.TotalSent = addre.TotalSent
-			ad.Balance = addre.Balance
-			ad.UnconfirmedBalance = addre.UnconfirmedBalance
-			ad.FinalBalance = addre.FinalBalance
-			ad.ConfirmedTransaction = addre.NumTX
-			ad.UnconfirmedTransaction = addre.UnconfirmedNumTX
-			ad.FinalTransaction = addre.FinalNumTX
-			err = ad.UpdateById(ad)
-			if err != nil {
-				s.ErrorMessage(w, err.Error())
-				return
-			}
-
-			// send response
-			result := &DepositStateResult{}
-			result.Confirm = true
-			result.Message = "transaction_confirmed"
-	
-			s.SendDataSuccess(w, result)
-			break
-		}
-
-		if i == 20 {
-			// send response
-			result := &DepositStateResult{}
-			result.Confirm = false
-			result.Message = "no_transaction"
-	
-			s.SendDataSuccess(w, result)
-			break
-		}
-	}
+	s.SendDataSuccess(w, result)
 }
 
 // check deposit state api
@@ -413,6 +351,99 @@ func (s *TransactionServer) HandleCheckDepositStateByAddress(w http.ResponseWrit
 			s.SendDataSuccess(w, result)
 			break
 		} 
+	}
+}
+
+// check deposit state by address api
+func (s *TransactionServer) HandleDepositStateByAddress(w http.ResponseWriter, r *http.Request) {
+	addr := r.URL.Query().Get("addr")
+	coinType := r.URL.Query().Get("coin_type")
+	confirm := false
+	ad, err := address.GetByAddress(addr)
+	if err != nil { 
+		s.ErrorMessage(w, err.Error())
+		return
+	}
+
+	// check coin type
+	switch coinType {
+	case "btc":
+		config.CoinType = "btc"
+	case "eth":
+		config.CoinType = "eth"
+	case "":
+		config.CoinType = "btc"
+	}
+
+	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
+	
+	// check confirm transaction
+	addre, err := btc.GetAddrBal(addr, nil)
+	if err != nil {
+		s.ErrorMessage(w, err.Error())
+		return
+	}
+
+	ad.TotalRevceived = addre.TotalReceived
+	ad.TotalSent = addre.TotalSent
+	ad.FinalBalance = addre.FinalBalance
+	ad.ConfirmedTransaction = addre.NumTX
+	ad.FinalTransaction = addre.FinalNumTX
+	ad.UnconfirmedTransaction = addre.UnconfirmedNumTX
+	ad.UnconfirmedBalance = addre.UnconfirmedBalance
+	// 	ad.Balance = addre.Balance
+
+	// if ad.Balance != addre.Balance {
+	// 	confirm = true
+	// 	coinValue = addre.Balance - ad.Balance
+
+	// 	ad.Balance = addre.Balance
+
+	// 	err = ad.UpdateById(ad)
+	// 	if err != nil {
+	// 		s.ErrorMessage(w, err.Error())
+	// 		return
+	// 	}
+
+	// 	// send response
+	// 	result := &DepositStateByAddressResult{}
+	// 	result.CoinType = config.CoinType
+	// 	result.CoinValue = coinValue
+	// 	result.Confirm = confirm
+	// 	result.Message = "transaction_confirmed"
+
+	// 	s.SendDataSuccess(w, result)
+	// }
+
+	if ad.UnconfirmedTransaction > 0 {
+		confirm = false
+		ad.Balance = addre.Balance
+
+		err = ad.UpdateById(ad)
+		if err != nil {
+			s.ErrorMessage(w, err.Error())
+			return
+		}
+
+		// send response
+		result := &DepositStateByAddressResult{}
+		result.CoinType = config.CoinType
+		result.CoinValue = ad.UnconfirmedBalance
+		result.Confirm = confirm
+		result.Message = "transaction_pending"
+
+		s.SendDataSuccess(w, result)
+	} else {
+		confirm = false
+
+		// send response
+		result := &DepositStateByAddressResult{}
+		result.CoinType = config.CoinType
+		result.CoinValue = 0
+		result.Confirm = confirm
+		result.Message = "no_transaction"
+
+		s.SendDataSuccess(w, result)
 	}
 }
 
