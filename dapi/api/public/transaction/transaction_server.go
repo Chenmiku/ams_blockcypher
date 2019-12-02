@@ -9,11 +9,13 @@ import (
 	"fmt"
 	"http/web"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
 	"github.com/blockcypher/gobcy"
 	"ams_system/dapi/config"
+	"encoding/json"
 )
 
 type TransactionServer struct {
@@ -31,6 +33,27 @@ type DepositStateResult struct {
 	Confirm	  bool 	`json:"confirm"`
 	Message	  string 	`json:"message"`
 }
+type TXFee struct {
+	Result bool
+	MSG string
+	RESP []Resp
+}
+type Resp struct {
+	CHK_Name string
+	CHK_Fee_Value string 
+	CHK_Final_Date string 
+}
+
+func getJson(url string, target interface{}) error {
+	var myClient = &http.Client{Timeout: 10 * time.Second}
+    r, err := myClient.Get(url)
+    if err != nil {
+        return err
+    }
+    defer r.Body.Close()
+
+    return json.NewDecoder(r.Body).Decode(target)
+}
 
 // create server mux to handle Transaction api
 func NewTransactionServer() *TransactionServer {
@@ -43,6 +66,7 @@ func NewTransactionServer() *TransactionServer {
 	s.HandleFunc("/check_deposit_state_by_address", s.HandleCheckDepositStateByAddress) 
 	s.HandleFunc("/deposit_state_by_address", s.HandleDepositStateByAddress) 
 	s.HandleFunc("/get", s.HandleGetByHash)
+	s.HandleFunc("/get_all", s.HandleGetAll)
 	return s
 }
 
@@ -51,14 +75,35 @@ func StrToInt(s string) int {
 	return int(i)
 }
 
+//get all transaction api
+func (s *TransactionServer) HandleGetAll(w http.ResponseWriter, r *http.Request) {
+	sortBy := r.URL.Query().Get("sort_by")
+	sortOrder := r.URL.Query().Get("sort_order")
+
+	pageSize := StrToInt(r.URL.Query().Get("page_size"))
+	pageNumber := StrToInt(r.URL.Query().Get("page_number"))
+
+	var res = []transaction.Transaction{}
+	count, err := transaction.GetAllTransaction(pageSize, pageNumber, sortBy, sortOrder, &res)
+
+	if err != nil {
+		s.SendError(w, err)
+	} else {
+		s.SendDataSuccess(w, map[string]interface{}{
+			"transactions": res,
+			"count":   count,
+		})
+	}
+}
+
 // send coin to polebit wallet api
 func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	sender := r.URL.Query().Get("sender")
 	receiver := r.URL.Query().Get("receiver")
-	value := StrToInt(r.URL.Query().Get("value"))
+	//value := StrToInt(r.URL.Query().Get("value"))
 	coinType := r.URL.Query().Get("coin_type")
 	var fees int
-	if value == 0  || receiver == "" || sender == "" {
+	if receiver == "" || sender == "" {
 		s.SendError(w, web.ErrBadRequest)
 		return
 	}
@@ -91,35 +136,47 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	// set fees
-	chain, err := btc.GetChain()
+	txfee := &TXFee{}
+	formdata := url.Values {
+		"search_type": {coinType},
+	}
+	resp, err := http.PostForm("http://ex.polebit.com:3001/admin/service/check_transaction_fee", formdata)
 	if err != nil {
-		s.ErrorMessage(w, err.Error())
+		s.ErrorMessage(w, "can't_get_fee")
 		return
 	}
-	fmt.Printf("%+v\n", chain)
 
-	switch coinType {
-	case "btc":
-		fees = chain.HighFee
-	case "eth":
-		fees = chain.HighFee * 21000
-	case "":
-		fees = chain.HighFee
+	json.NewDecoder(resp.Body).Decode(txfee)
+	fmt.Println(txfee)
+	if(!txfee.Result) {
+		s.ErrorMessage(w, "return_false")
+		return
+	} else {
+		switch coinType {
+		case "btc":
+			fees = StrToInt(txfee.RESP[0].CHK_Fee_Value)
+		case "eth":
+			fees = StrToInt(txfee.RESP[0].CHK_Fee_Value) * 1000000000 * 21000
+		case "":
+			fees = StrToInt(txfee.RESP[0].CHK_Fee_Value)
+		}
 	}
 
 	//check fund
 	addr, err := btc.GetAddrBal(sender, nil)
-	if addr.Balance == 0 || addr.Balance < value + fees {
-		s.ErrorMessage(w, "not_enough_fund")
-		return
-	}
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
 		return
 	}
+	// if addr.Balance == 0 || addr.Balance < value + fees {
+	// 	s.ErrorMessage(w, "not_enough_fund")
+	// 	return
+	// }
 
+	fmt.Println(addr.Balance)
+	fmt.Println(fees)
 	// create new transaction
-	skel, err := btc.NewTX(gobcy.TempNewTX(addr.Address, receiver, value), false)
+	skel, err := btc.NewTX(gobcy.TempNewTX(addr.Address, receiver, addr.Balance - fees), false)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
 		return
@@ -183,10 +240,13 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	u.ToSign = skel.ToSign
 	u.Signatures = skel.Signatures
 	u.PublicKeys = skel.PubKeys
+
+	// tra := &transaction.Transaction{}
+	// getJson("https://api.blockcypher.com/v1/" + config.CoinType + "/main/txs/" + u.Hash, tra)
 	// if config.CoinType == "eth" {
-	// 	u.GasUsed = skel.Trans.GasUsed
-	// 	u.GasPrice = skel.Trans.GasPrice
-	// 	u.GasLimit = skel.Trans.GasLimit
+	// 	u.GasUsed = tra.GasUsed
+	// 	u.GasPrice = tra.GasPrice
+	// 	u.GasLimit = tra.GasLimit
 	// }
 	err = u.Create()
 	if err != nil {
@@ -218,6 +278,7 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	// check confirm transaction every 3 second
 	
+	tra := &transaction.Transaction{}
 	var x = 1200
 	for i:=0;i<x;i++ {
 		time.Sleep(3 * time.Second)
@@ -229,6 +290,7 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 
 		if trans.Confirmations > 0 {
 			// save transaction on db
+			getJson("https://api.blockcypher.com/v1/" + config.CoinType + "/main/txs/" + hash, tra)
 			u, err := transaction.GetByHash(hash)
 			if err == nil {
 				u.Hash = trans.Hash
@@ -244,11 +306,11 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 				u.InputsTransaction = trans.VinSize
 				u.OutputsTransaction = trans.VoutSize
 				u.Addresses = trans.Addresses
-				// if config.CoinType == "eth" {
-				// 	u.GasUsed = trans.GasUsed
-				// 	u.GasPrice = trans.GasPrice
-				// 	u.GasLimit = trans.GasLimit
-				// }
+				if config.CoinType == "eth" {
+					u.GasUsed = tra.GasUsed
+					u.GasPrice = tra.GasPrice
+					u.GasLimit = tra.GasLimit
+				}
 				err = u.UpdateById(u)
 				if err != nil {
 					s.ErrorMessage(w, err.Error())
