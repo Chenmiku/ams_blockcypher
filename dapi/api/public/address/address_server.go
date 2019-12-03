@@ -108,6 +108,7 @@ func(s *AddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	u.Addr = addrKeys.Address
 	u.CoinType = config.CoinType
 	u.UserID = userid
+	fmt.Println("here")
 	err = u.Create()
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
@@ -122,8 +123,8 @@ func(s *AddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		addressResult.Id = ad.ID
 		addressResult.UserID = ad.UserID
 		addressResult.CoinType = ad.CoinType
-		addressResult.CTime = ConvertDateTime(ad.CTime)
-		addressResult.MTime = ConvertDateTime(ad.MTime)
+		addressResult.CTime = time.Now().Format("2006-01-02 15:04:05")
+		addressResult.MTime = time.Now().Format("2006-01-02 15:04:05")
 		addressResult.TotalRevceived = ConvertToCoin(coinType, ad.TotalRevceived)
 		addressResult.TotalSent = ConvertToCoin(coinType, ad.TotalSent) 
 		addressResult.Balance = ConvertToCoin(coinType, ad.Balance) 
