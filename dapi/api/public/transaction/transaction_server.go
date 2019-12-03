@@ -1,11 +1,11 @@
 package transaction
 
 import (
-	"ams_system/dapi/o/transaction_input"
-	"ams_system/dapi/o/transaction_output"
 	"ams_system/dapi/o/address"
 	"ams_system/dapi/o/addresskey"
 	"ams_system/dapi/o/transaction"
+	"ams_system/dapi/o/transaction_input"
+	"ams_system/dapi/o/transaction_output"
 	"fmt"
 	"http/web"
 	"net/http"
@@ -13,9 +13,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/blockcypher/gobcy"
 	"ams_system/dapi/config"
 	"encoding/json"
+	"github.com/blockcypher/gobcy"
 )
 
 type TransactionServer struct {
@@ -23,36 +23,48 @@ type TransactionServer struct {
 	*http.ServeMux
 }
 
+type TransactionResult struct {
+	Confirm                bool   `json:"confirm"`
+	Message                string `json:"message"`
+	TXHash                   string `json:"tx_hash"`
+	TXType                   string `json:"tx_type"`
+	TXValue                  float32    `json:"tx_value"`
+	TXFee                    float32    `json:"tx_fee"`
+	TXTotalAmount float32    `json:"tx_total_amount"` // Value + Fee
+	PreBalance             float32    `json:"pre_balance"`     // balance
+	NextBalance            float32    `json:"next_balance"`    // Current Balance in wallet - Total Transaction Amount
+	TXCreateTime     string  `json:"tx_create_time"`
+}
 type DepositStateByAddressResult struct {
 	CoinType  string `json:"coin_type"`
-	CoinValue int `json:"coin_value"`
-	Confirm	  bool 	`json:"confirm"`
-	Message	  string 	`json:"message"`
+	CoinValue float32    `json:"coin_value"`
+	Confirm   bool   `json:"confirm"`
+	Message   string `json:"message"`
 }
 type DepositStateResult struct {
-	Confirm	  bool 	`json:"confirm"`
-	Message	  string 	`json:"message"`
+	Confirm bool   `json:"confirm"`
+	Message string `json:"message"`
 }
 type TXFee struct {
 	Result bool
-	MSG string
-	RESP []Resp
+	MSG    string
+	RESP   []Resp
 }
 type Resp struct {
-	CHK_Name string
-	CHK_Fee_Value string 
-	CHK_Final_Date string 
+	CHK_Name       string
+	CHK_Fee_Value  string
+	CHK_Final_Date string
 }
 
 func getJson(url string, target interface{}) error {
 	var myClient = &http.Client{Timeout: 10 * time.Second}
-    r, err := myClient.Get(url)
-    if err != nil {
-        return err
-    }
-    defer r.Body.Close()
+	r, err := myClient.Get(url)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
 
-    return json.NewDecoder(r.Body).Decode(target)
+	return json.NewDecoder(r.Body).Decode(target)
 }
 
 // create server mux to handle Transaction api
@@ -61,10 +73,10 @@ func NewTransactionServer() *TransactionServer {
 		ServeMux: http.NewServeMux(),
 	}
 
-	s.HandleFunc("/send_to_polebit", s.HandleSend)                                                                                                  
-	s.HandleFunc("/check_deposit_state", s.HandleCheckDepositState) 
-	s.HandleFunc("/check_deposit_state_by_address", s.HandleCheckDepositStateByAddress) 
-	s.HandleFunc("/deposit_state_by_address", s.HandleDepositStateByAddress) 
+	s.HandleFunc("/send_to_polebit", s.HandleSend)
+	s.HandleFunc("/check_deposit_state", s.HandleCheckDepositState)
+	s.HandleFunc("/check_deposit_state_by_address", s.HandleCheckDepositStateByAddress)
+	s.HandleFunc("/deposit_state_by_address", s.HandleDepositStateByAddress)
 	s.HandleFunc("/get", s.HandleGetByHash)
 	s.HandleFunc("/get_all", s.HandleGetAll)
 	return s
@@ -91,7 +103,7 @@ func (s *TransactionServer) HandleGetAll(w http.ResponseWriter, r *http.Request)
 	} else {
 		s.SendDataSuccess(w, map[string]interface{}{
 			"transactions": res,
-			"count":   count,
+			"count":        count,
 		})
 	}
 }
@@ -100,7 +112,6 @@ func (s *TransactionServer) HandleGetAll(w http.ResponseWriter, r *http.Request)
 func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	sender := r.URL.Query().Get("sender")
 	receiver := r.URL.Query().Get("receiver")
-	//value := StrToInt(r.URL.Query().Get("value"))
 	coinType := r.URL.Query().Get("coin_type")
 	var fees int
 	if receiver == "" || sender == "" {
@@ -137,7 +148,7 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	// set fees
 	txfee := &TXFee{}
-	formdata := url.Values {
+	formdata := url.Values{
 		"search_type": {coinType},
 	}
 	resp, err := http.PostForm("http://ex.polebit.com:3001/admin/service/check_transaction_fee", formdata)
@@ -148,7 +159,7 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 
 	json.NewDecoder(resp.Body).Decode(txfee)
 	fmt.Println(txfee)
-	if(!txfee.Result) {
+	if !txfee.Result {
 		s.ErrorMessage(w, "return_false")
 		return
 	} else {
@@ -156,7 +167,7 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 		case "btc":
 			fees = StrToInt(txfee.RESP[0].CHK_Fee_Value)
 		case "eth":
-			fees = StrToInt(txfee.RESP[0].CHK_Fee_Value) * 1000000000 * 21000
+			fees = 20 * 1000000000 * 21000  //StrToInt(txfee.RESP[0].CHK_Fee_Value) * 1000000000 * 21000
 		case "":
 			fees = StrToInt(txfee.RESP[0].CHK_Fee_Value)
 		}
@@ -168,17 +179,11 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 		s.ErrorMessage(w, err.Error())
 		return
 	}
-	// if addr.Balance == 0 || addr.Balance < value + fees {
-	// 	s.ErrorMessage(w, "not_enough_fund")
-	// 	return
-	// }
 
-	fmt.Println(addr.Balance)
-	fmt.Println(fees)
 	// create new transaction
-	skel, err := btc.NewTX(gobcy.TempNewTX(addr.Address, receiver, addr.Balance - fees), false)
+	skel, err := btc.NewTX(gobcy.TempNewTX(addr.Address, receiver, addr.Balance-fees), false)
 	if err != nil {
-		s.ErrorMessage(w, err.Error())
+		s.ErrorMessage(w, "not_enough_fund")
 		return
 	}
 	//sign it
@@ -198,7 +203,7 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 
 	// create txoutput on db
 	txO := skel.Trans.Outputs
-	for i,_ := range txO {
+	for i, _ := range txO {
 		txOutput.Value = txO[i].Value
 		txOutput.ScriptType = txO[i].ScriptType
 		txOutput.Script = txO[i].Script
@@ -210,9 +215,9 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 		}
 		txOutputs = append(txOutputs, *txOutput)
 	}
-	//create txinput on db 
+	//create txinput on db
 	txI := skel.Trans.Inputs
-	for i,_ := range txI {
+	for i, _ := range txI {
 		txInput.PreviousHash = txI[i].PrevHash
 		txInput.OutputIndex = txI[i].OutputIndex
 		txInput.OutputValue = txI[i].OutputValue
@@ -226,7 +231,7 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 		}
 		txInputs = append(txInputs, *txInput)
 	}
-	// create tx on db 
+	// create tx on db
 	u.Hash = skel.Trans.Hash
 	u.BlockHeight = skel.Trans.BlockHeight
 	u.TotalBlock = skel.Trans.Confirmations
@@ -241,24 +246,33 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	u.Signatures = skel.Signatures
 	u.PublicKeys = skel.PubKeys
 
-	// tra := &transaction.Transaction{}
-	// getJson("https://api.blockcypher.com/v1/" + config.CoinType + "/main/txs/" + u.Hash, tra)
-	// if config.CoinType == "eth" {
-	// 	u.GasUsed = tra.GasUsed
-	// 	u.GasPrice = tra.GasPrice
-	// 	u.GasLimit = tra.GasLimit
-	// }
+	tra := &transaction.Transaction{}
+	getJson("https://api.blockcypher.com/v1/"+config.CoinType+"/main/txs/"+u.Hash, tra)
+	if config.CoinType == "eth" {
+		u.GasUsed = tra.GasUsed
+		u.GasPrice = tra.GasPrice
+		u.GasLimit = tra.GasLimit
+	}
 	err = u.Create()
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
-	} 
+	}
 
+	fmt.Println(u)
 	// send response
-	result := &DepositStateResult{}
-	result.Confirm = false
-	result.Message = "transaction_pending"
+	txResult := &TransactionResult{}
+	txResult.Confirm = false
+	txResult.Message = "transaction_pending"
+	txResult.TXHash = skel.Trans.Hash
+	txResult.TXType = coinType
+	txResult.TXCreateTime = time.Now().Format("2006-01-02 15:04:05")
+	txResult.TXValue = ConvertToCoin(coinType, skel.Trans.Total)  
+	txResult.TXFee = ConvertToCoin(coinType, skel.Trans.Fees) 
+	txResult.TXTotalAmount = txResult.TXValue + txResult.TXFee
+	txResult.PreBalance = ConvertToCoin(coinType, addr.Balance) 
+	txResult.NextBalance = ConvertToCoin(coinType, addr.Balance) - txResult.TXTotalAmount
 
-	s.SendDataSuccess(w, result)
+	s.SendDataSuccess(w, txResult)
 }
 
 // check deposit state api
@@ -277,10 +291,9 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
 	// check confirm transaction every 3 second
-	
-	tra := &transaction.Transaction{}
+
 	var x = 1200
-	for i:=0;i<x;i++ {
+	for i := 0; i < x; i++ {
 		time.Sleep(3 * time.Second)
 		trans, err := btc.GetTX(hash, nil)
 		if err != nil {
@@ -290,7 +303,12 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 
 		if trans.Confirmations > 0 {
 			// save transaction on db
-			getJson("https://api.blockcypher.com/v1/" + config.CoinType + "/main/txs/" + hash, tra)
+			tr, err := transaction.GetByHash(hash)
+			if err != nil {
+				s.ErrorMessage(w, "transaction_not_found")
+				return
+			}
+
 			u, err := transaction.GetByHash(hash)
 			if err == nil {
 				u.Hash = trans.Hash
@@ -306,12 +324,7 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 				u.InputsTransaction = trans.VinSize
 				u.OutputsTransaction = trans.VoutSize
 				u.Addresses = trans.Addresses
-				if config.CoinType == "eth" {
-					u.GasUsed = tra.GasUsed
-					u.GasPrice = tra.GasPrice
-					u.GasLimit = tra.GasLimit
-				}
-				err = u.UpdateById(u)
+				err = tr.UpdateById(u)
 				if err != nil {
 					s.ErrorMessage(w, err.Error())
 					return
@@ -322,7 +335,7 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 			result := &DepositStateResult{}
 			result.Confirm = true
 			result.Message = "transaction_confirmed"
-	
+
 			s.SendDataSuccess(w, result)
 			break
 		}
@@ -332,7 +345,7 @@ func (s *TransactionServer) HandleCheckDepositState(w http.ResponseWriter, r *ht
 			result := &DepositStateResult{}
 			result.Confirm = false
 			result.Message = "no_transaction"
-	
+
 			s.SendDataSuccess(w, result)
 			break
 		}
@@ -344,12 +357,13 @@ func (s *TransactionServer) HandleCheckDepositStateByAddress(w http.ResponseWrit
 	addr := r.URL.Query().Get("addr")
 	coinType := r.URL.Query().Get("coin_type")
 	confirm := false
-	coinValue := 0
+
 	ad, err := address.GetByAddress(addr)
-	if err != nil { 
-		s.ErrorMessage(w, err.Error())
+	if err != nil {
+		s.ErrorMessage(w, "address_not_found")
 		return
 	}
+	add, err := address.GetByAddress(addr)
 
 	// check coin type
 	switch coinType {
@@ -362,10 +376,10 @@ func (s *TransactionServer) HandleCheckDepositStateByAddress(w http.ResponseWrit
 	}
 
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
-	
+
 	// check confirm transaction every 3 second
 	var x = 1200
-	for i:=0;i<x;i++ {
+	for i := 0; i < x; i++ {
 		time.Sleep(3 * time.Second)
 		addre, err := btc.GetAddrBal(addr, nil)
 		if err != nil {
@@ -375,17 +389,16 @@ func (s *TransactionServer) HandleCheckDepositStateByAddress(w http.ResponseWrit
 
 		if ad.Balance != addre.Balance {
 			confirm = true
-			coinValue = addre.Balance - ad.Balance
 
 			ad.TotalRevceived = addre.TotalReceived
 			ad.TotalSent = addre.TotalSent
 			ad.Balance = addre.Balance
-			ad.UnconfirmedBalance = addre.UnconfirmedBalance
+			ad.UnconfirmedBalance = &addre.UnconfirmedBalance
 			ad.FinalBalance = addre.FinalBalance
 			ad.ConfirmedTransaction = addre.NumTX
-			ad.UnconfirmedTransaction = addre.UnconfirmedNumTX
+			ad.UnconfirmedTransaction = &addre.UnconfirmedNumTX
 			ad.FinalTransaction = addre.FinalNumTX
-			err = ad.UpdateById(ad)
+			err = add.UpdateById(ad)
 			if err != nil {
 				s.ErrorMessage(w, err.Error())
 				return
@@ -394,10 +407,10 @@ func (s *TransactionServer) HandleCheckDepositStateByAddress(w http.ResponseWrit
 			// send response
 			result := &DepositStateByAddressResult{}
 			result.CoinType = config.CoinType
-			result.CoinValue = coinValue
+			result.CoinValue = ConvertToCoin(coinType, addre.UnconfirmedBalance)
 			result.Confirm = confirm
 			result.Message = "transaction_confirmed"
-	
+
 			s.SendDataSuccess(w, result)
 			break
 		}
@@ -409,10 +422,10 @@ func (s *TransactionServer) HandleCheckDepositStateByAddress(w http.ResponseWrit
 			result.CoinValue = 0
 			result.Confirm = false
 			result.Message = "no_transaction"
-	
+
 			s.SendDataSuccess(w, result)
 			break
-		} 
+		}
 	}
 }
 
@@ -421,11 +434,14 @@ func (s *TransactionServer) HandleDepositStateByAddress(w http.ResponseWriter, r
 	addr := r.URL.Query().Get("addr")
 	coinType := r.URL.Query().Get("coin_type")
 	confirm := false
+	coinValue := 0
+
 	ad, err := address.GetByAddress(addr)
-	if err != nil { 
-		s.ErrorMessage(w, err.Error())
+	if err != nil {
+		s.ErrorMessage(w, "address_not_found")
 		return
 	}
+	add, err := address.GetByAddress(addr)
 
 	// check coin type
 	switch coinType {
@@ -438,7 +454,7 @@ func (s *TransactionServer) HandleDepositStateByAddress(w http.ResponseWriter, r
 	}
 
 	btc := gobcy.API{config.UserToken, config.CoinType, config.Chain}
-	
+
 	// check confirm transaction
 	addre, err := btc.GetAddrBal(addr, nil)
 	if err != nil {
@@ -451,37 +467,18 @@ func (s *TransactionServer) HandleDepositStateByAddress(w http.ResponseWriter, r
 	ad.FinalBalance = addre.FinalBalance
 	ad.ConfirmedTransaction = addre.NumTX
 	ad.FinalTransaction = addre.FinalNumTX
-	ad.UnconfirmedTransaction = addre.UnconfirmedNumTX
-	ad.UnconfirmedBalance = addre.UnconfirmedBalance
-	// 	ad.Balance = addre.Balance
-
-	// if ad.Balance != addre.Balance {
-	// 	confirm = true
-	// 	coinValue = addre.Balance - ad.Balance
+	ad.UnconfirmedTransaction = &addre.UnconfirmedNumTX
+	ad.UnconfirmedBalance = &addre.UnconfirmedBalance
 
 	// 	ad.Balance = addre.Balance
 
-	// 	err = ad.UpdateById(ad)
-	// 	if err != nil {
-	// 		s.ErrorMessage(w, err.Error())
-	// 		return
-	// 	}
+	if ad.Balance != addre.Balance {
+		confirm = true
+		coinValue = addre.Balance - ad.Balance
 
-	// 	// send response
-	// 	result := &DepositStateByAddressResult{}
-	// 	result.CoinType = config.CoinType
-	// 	result.CoinValue = coinValue
-	// 	result.Confirm = confirm
-	// 	result.Message = "transaction_confirmed"
-
-	// 	s.SendDataSuccess(w, result)
-	// }
-
-	if ad.UnconfirmedTransaction > 0 {
-		confirm = false
 		ad.Balance = addre.Balance
 
-		err = ad.UpdateById(ad)
+		err = add.UpdateById(ad)
 		if err != nil {
 			s.ErrorMessage(w, err.Error())
 			return
@@ -490,7 +487,28 @@ func (s *TransactionServer) HandleDepositStateByAddress(w http.ResponseWriter, r
 		// send response
 		result := &DepositStateByAddressResult{}
 		result.CoinType = config.CoinType
-		result.CoinValue = ad.UnconfirmedBalance
+		result.CoinValue = ConvertToCoin(coinType, coinValue)
+		result.Confirm = confirm
+		result.Message = "transaction_confirmed"
+
+		s.SendDataSuccess(w, result)
+		return
+	}
+
+	if addre.UnconfirmedNumTX > 0 {
+		confirm = false
+		ad.Balance = addre.Balance
+
+		err = add.UpdateById(ad)
+		if err != nil {
+			s.ErrorMessage(w, err.Error())
+			return
+		}
+
+		// send response
+		result := &DepositStateByAddressResult{}
+		result.CoinType = config.CoinType
+		result.CoinValue = ConvertToCoin(coinType, addre.UnconfirmedBalance)
 		result.Confirm = confirm
 		result.Message = "transaction_pending"
 
@@ -518,4 +536,23 @@ func (s *TransactionServer) HandleGetByHash(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	s.SendDataSuccess(w, u)
+}
+
+func ConvertToCoin(coinType string, value int) float32 {
+	var result float32
+	switch coinType {
+	case "btc":
+		result = float32(value) / 100000000
+	case "eth":
+		result = float32(value) / 1000000000000000000
+	case "":
+		result = float32(value) / 100000000
+	}
+
+	return result
+}
+
+func ConvertDateTime(value int64) string {
+	t := time.Unix(0, value)
+	return t.Format("2006-01-02 15:04:05")
 }

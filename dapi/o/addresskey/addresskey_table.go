@@ -18,5 +18,5 @@ func MarkDelete(id string) error {
 }
 
 func (w *AddressKey) UpdateById(newvalue *AddressKey) error {
-	return TableAddressKey.UnsafeUpdateByID(w.ID, newvalue)
+	return TableAddressKey.UpdateByID(w.ID, newvalue)
 }

@@ -9,11 +9,29 @@ import (
 	"github.com/blockcypher/gobcy"
 	"ams_system/dapi/config"
 	"fmt"
+	"time"
 )
 
 type AddressServer struct {
 	web.JsonServer
 	*http.ServeMux
+}
+
+type AddressResult struct {
+	Id					   string `json:"id"`
+	Addr                   string `json:"addr"`
+	TotalRevceived         float32    `json:"total_revceived"`
+	TotalSent              float32    `json:"total_sent"`
+	Balance                float32    `json:"balance"`
+	UnconfirmedBalance     float32   `json:"unconfirmed_balance"`
+	FinalBalance           float32    `json:"final_balance"`
+	CoinType               string `json:"coin_type"`
+	ConfirmedTransaction   float32    `json:"confirmed_transaction"`
+	UnconfirmedTransaction float32   `json:"unconfirmed_transaction"`
+	FinalTransaction       float32    `json:"final_transaction"`
+	UserID                 int    `json:"user_id"`
+	CTime                  string  `json:"ctime"` // Create Time
+	MTime                  string  `json:"mtime"` // Update Time
 }
 
 // create server mux to handle public address api
@@ -29,11 +47,6 @@ func NewAddressServer() *AddressServer {
 	s.HandleFunc("/mark_delete", s.HandleMarkDelete)
 	return s
 }
-
-func StrToInt(s string) int {
-	i, _ := strconv.ParseInt(s, 10, 64)
-	return int(i)
-} 
 
 //get all address api by user
 func (s *AddressServer) HandleGetAll(w http.ResponseWriter, r *http.Request) {
@@ -95,13 +108,31 @@ func(s *AddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	u.Addr = addrKeys.Address
 	u.CoinType = config.CoinType
 	u.UserID = userid
-	u.Balance = 0
 	err = u.Create()
 	if err != nil {
-		fmt.Println("create address success")
 		s.ErrorMessage(w, err.Error())
 	} else {
-		s.SendDataSuccess(w, u)
+		fmt.Println("create address success")
+		ad, err := address.GetByAddress(addrKeys.Address)
+		if err != nil {
+			s.ErrorMessage(w, err.Error())
+			return
+		}
+		addressResult := &AddressResult{}
+		addressResult.Id = ad.ID
+		addressResult.UserID = ad.UserID
+		addressResult.CoinType = ad.CoinType
+		addressResult.CTime = ConvertDateTime(ad.CTime)
+		addressResult.MTime = ConvertDateTime(ad.MTime)
+		addressResult.TotalRevceived = ConvertToCoin(coinType, ad.TotalRevceived)
+		addressResult.TotalSent = ConvertToCoin(coinType, ad.TotalSent) 
+		addressResult.Balance = ConvertToCoin(coinType, ad.Balance) 
+		addressResult.UnconfirmedBalance = 0
+		addressResult.FinalBalance = ConvertToCoin(coinType, ad.FinalBalance) 
+		addressResult.ConfirmedTransaction = ConvertToCoin(coinType, ad.ConfirmedTransaction) 
+		addressResult.UnconfirmedTransaction = 0 
+		addressResult.FinalTransaction = ConvertToCoin(coinType, ad.FinalTransaction)
+		s.SendDataSuccess(w, addressResult)
 	}
 }
 
@@ -129,24 +160,40 @@ func (s *AddressServer) HandleGetByAddress(w http.ResponseWriter, r *http.Reques
 
 	ad, err := address.GetByAddress(addr)
 	if err != nil { 
-		s.ErrorMessage(w, err.Error())
+		s.ErrorMessage(w, "address_not_found")
 		return
 	}
-	ad.CoinType = config.CoinType
+	add, err := address.GetByAddress(addr)
+
 	ad.TotalRevceived = addre.TotalReceived
 	ad.TotalSent = addre.TotalSent
 	ad.Balance = addre.Balance
-	ad.UnconfirmedBalance = addre.UnconfirmedBalance
+	ad.UnconfirmedBalance = &addre.UnconfirmedBalance
 	ad.FinalBalance = addre.FinalBalance
 	ad.ConfirmedTransaction = addre.NumTX
-	ad.UnconfirmedTransaction = addre.UnconfirmedNumTX
+	ad.UnconfirmedTransaction = &addre.UnconfirmedNumTX
 	ad.FinalTransaction = addre.FinalNumTX
 
-	err = ad.UpdateById(ad)
+	err = add.UpdateById(ad)
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
 	} else {
-		s.SendDataSuccess(w, ad)
+		addressResult := &AddressResult{}
+		addressResult.Id = ad.ID
+		addressResult.Addr = addr
+		addressResult.UserID = ad.UserID
+		addressResult.CoinType = ad.CoinType
+		addressResult.CTime = ConvertDateTime(ad.CTime)
+		addressResult.MTime = ConvertDateTime(ad.MTime)
+		addressResult.TotalRevceived = ConvertToCoin(coinType, ad.TotalRevceived)
+		addressResult.TotalSent = ConvertToCoin(coinType, ad.TotalSent) 
+		addressResult.Balance = ConvertToCoin(coinType, ad.Balance) 
+		addressResult.UnconfirmedBalance = ConvertToCoin(coinType, *ad.UnconfirmedBalance) 
+		addressResult.FinalBalance = ConvertToCoin(coinType, ad.FinalBalance) 
+		addressResult.ConfirmedTransaction = ConvertToCoin(coinType, ad.ConfirmedTransaction) 
+		addressResult.UnconfirmedTransaction = ConvertToCoin(coinType, *ad.UnconfirmedTransaction) 
+		addressResult.FinalTransaction = ConvertToCoin(coinType, ad.FinalTransaction)
+		s.SendDataSuccess(w, addressResult)
 	}
 }
 
@@ -195,4 +242,28 @@ func (s *AddressServer) HandleMarkDelete(w http.ResponseWriter, r *http.Request)
 	} else {
 		s.Success(w)
 	}
+}
+
+func StrToInt(s string) int {
+	i, _ := strconv.ParseInt(s, 10, 64)
+	return int(i)
+} 
+
+func ConvertToCoin(coinType string, value int) float32 {
+	var result float32
+	switch coinType {
+	case "btc":
+		result = (float32(value) /100000000)
+	case "eth":
+		result = (float32(value) /1000000000000000000)
+	case "":
+		result = (float32(value) /100000000)
+	}
+
+	return result
+}
+
+func ConvertDateTime(value int64) string {
+	t := time.Unix(0, value)
+	return t.Format("2006-01-02 15:04:05")
 }

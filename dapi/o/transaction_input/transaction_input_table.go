@@ -18,5 +18,5 @@ func MarkDelete(id string) error {
 }
 
 func (w *TransactionInput) UpdateById(newvalue *TransactionInput) error {
-	return TableTransactionInput.UnsafeUpdateByID(w.ID, newvalue)
+	return TableTransactionInput.UpdateByID(w.ID, newvalue)
 }
