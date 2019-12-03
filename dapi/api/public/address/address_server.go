@@ -121,6 +121,7 @@ func(s *AddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		}
 		addressResult := &AddressResult{}
 		addressResult.Id = ad.ID
+		addressResult.Addr = addrKeys.Address
 		addressResult.UserID = ad.UserID
 		addressResult.CoinType = ad.CoinType
 		addressResult.CTime = time.Now().Format("2006-01-02 15:04:05")
