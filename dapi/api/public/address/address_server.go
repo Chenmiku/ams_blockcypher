@@ -20,15 +20,15 @@ type AddressServer struct {
 type AddressResult struct {
 	Id					   string `json:"id"`
 	Addr                   string `json:"addr"`
-	TotalRevceived         float32    `json:"total_revceived"`
-	TotalSent              float32    `json:"total_sent"`
-	Balance                float32    `json:"balance"`
-	UnconfirmedBalance     float32   `json:"unconfirmed_balance"`
-	FinalBalance           float32    `json:"final_balance"`
+	TotalRevceived         float64    `json:"total_revceived"`
+	TotalSent              float64    `json:"total_sent"`
+	Balance                float64    `json:"balance"`
+	UnconfirmedBalance     float64   `json:"unconfirmed_balance"`
+	FinalBalance           float64    `json:"final_balance"`
 	CoinType               string `json:"coin_type"`
-	ConfirmedTransaction   float32    `json:"confirmed_transaction"`
-	UnconfirmedTransaction float32   `json:"unconfirmed_transaction"`
-	FinalTransaction       float32    `json:"final_transaction"`
+	ConfirmedTransaction   int    `json:"confirmed_transaction"`
+	UnconfirmedTransaction int   `json:"unconfirmed_transaction"`
+	FinalTransaction       int    `json:"final_transaction"`
 	UserID                 int    `json:"user_id"`
 	CTime                  string  `json:"ctime"` // Create Time
 	MTime                  string  `json:"mtime"` // Update Time
@@ -108,7 +108,6 @@ func(s *AddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	u.Addr = addrKeys.Address
 	u.CoinType = config.CoinType
 	u.UserID = userid
-	fmt.Println("here")
 	err = u.Create()
 	if err != nil {
 		s.ErrorMessage(w, err.Error())
@@ -131,9 +130,9 @@ func(s *AddressServer) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		addressResult.Balance = ConvertToCoin(coinType, ad.Balance) 
 		addressResult.UnconfirmedBalance = 0
 		addressResult.FinalBalance = ConvertToCoin(coinType, ad.FinalBalance) 
-		addressResult.ConfirmedTransaction = ConvertToCoin(coinType, ad.ConfirmedTransaction) 
+		addressResult.ConfirmedTransaction = ad.ConfirmedTransaction
 		addressResult.UnconfirmedTransaction = 0 
-		addressResult.FinalTransaction = ConvertToCoin(coinType, ad.FinalTransaction)
+		addressResult.FinalTransaction = ad.FinalTransaction
 		s.SendDataSuccess(w, addressResult)
 	}
 }
@@ -185,16 +184,16 @@ func (s *AddressServer) HandleGetByAddress(w http.ResponseWriter, r *http.Reques
 		addressResult.Addr = addr
 		addressResult.UserID = ad.UserID
 		addressResult.CoinType = ad.CoinType
-		addressResult.CTime = ConvertDateTime(ad.CTime)
-		addressResult.MTime = ConvertDateTime(ad.MTime)
+		addressResult.CTime = ConvertDateTime(add.CTime)
+		addressResult.MTime = time.Now().Format("2006-01-02 15:04:05")
 		addressResult.TotalRevceived = ConvertToCoin(coinType, ad.TotalRevceived)
 		addressResult.TotalSent = ConvertToCoin(coinType, ad.TotalSent) 
 		addressResult.Balance = ConvertToCoin(coinType, ad.Balance) 
 		addressResult.UnconfirmedBalance = ConvertToCoin(coinType, *ad.UnconfirmedBalance) 
-		addressResult.FinalBalance = ConvertToCoin(coinType, ad.FinalBalance) 
-		addressResult.ConfirmedTransaction = ConvertToCoin(coinType, ad.ConfirmedTransaction) 
-		addressResult.UnconfirmedTransaction = ConvertToCoin(coinType, *ad.UnconfirmedTransaction) 
-		addressResult.FinalTransaction = ConvertToCoin(coinType, ad.FinalTransaction)
+		addressResult.FinalBalance = ConvertToCoin(coinType, ad.FinalBalance)
+		addressResult.ConfirmedTransaction = ad.ConfirmedTransaction
+		addressResult.UnconfirmedTransaction = *ad.UnconfirmedTransaction
+		addressResult.FinalTransaction = ad.FinalTransaction
 		s.SendDataSuccess(w, addressResult)
 	}
 }
@@ -251,21 +250,21 @@ func StrToInt(s string) int {
 	return int(i)
 } 
 
-func ConvertToCoin(coinType string, value int) float32 {
-	var result float32
+func ConvertToCoin(coinType string, value int) float64 {
+	var result float64
 	switch coinType {
 	case "btc":
-		result = (float32(value) /100000000)
+		result = (float64(value) /100000000)
 	case "eth":
-		result = (float32(value) /1000000000000000000)
+		result = (float64(value) /1000000000000000000)
 	case "":
-		result = (float32(value) /100000000)
+		result = (float64(value) /100000000)
 	}
 
 	return result
 }
 
 func ConvertDateTime(value int64) string {
-	t := time.Unix(0, value)
+	t := time.Unix(value, 0)
 	return t.Format("2006-01-02 15:04:05")
 }

@@ -33,20 +33,13 @@ func (s *JsonServer) SendError(w http.ResponseWriter, err error) {
 	}
 }
 
-// func (s *JsonServer) SendSuccess(w http.ResponseWriter, v interface{}) {
-// 	w.Header().Add("Content-Type", "application/json")
-// 	if wsuccess, ok := err.(IWebSuccess); ok {
-// 		w.WriteHeader(werr.StatusCode())
-// 	} else {
-// 		glog.Error(err, string(debug.Stack()))
-// 		err = ErrServerError
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 	}
-// 	s.sendJson(w, map[string]interface{}{
-// 		"success": true,
-// 		"data": v,
-// 	})
-// }
+func (s *JsonServer) ErrorMessage(w http.ResponseWriter, message string) {
+	w.Header().Add("Content-Type", "application/json")
+	s.sendJson(w, map[string]interface{}{
+		"success": false,
+		"message": message,
+	})
+}
 
 func (s *JsonServer) SendCustomError(w http.ResponseWriter, err error) {
 	if err != nil {
@@ -84,25 +77,17 @@ func (s *JsonServer) SendDataSuccess(w http.ResponseWriter, v interface{}) {
 	})
 }
 
-func (s *JsonServer) SendSuccessMessage(w http.ResponseWriter, message string, confirm bool) {
+func (s *JsonServer) SendCreateSuccess(w http.ResponseWriter, v interface{}) {
+	w.WriteHeader(http.StatusCreated)
 	w.Header().Add("Content-Type", "application/json")
 	s.sendJson(w, map[string]interface{}{
 		"success": true,
-		"confirm": confirm,
-		"message":    message,
+		"data":    v,
 	})
 }
 
 func (s *JsonServer) Success(w http.ResponseWriter) {
 	s.SendDataSuccess(w, nil)
-}
-
-func (s *JsonServer) ErrorMessage(w http.ResponseWriter, message string) {
-	w.Header().Add("Content-Type", "application/json")
-	s.sendJson(w, map[string]interface{}{
-		"success": false,
-		"message": message,
-	})
 }
 
 func (s *JsonServer) Send(w http.ResponseWriter, data interface{}, err ...error) {

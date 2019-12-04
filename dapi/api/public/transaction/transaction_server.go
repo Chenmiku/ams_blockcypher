@@ -24,22 +24,23 @@ type TransactionServer struct {
 }
 
 type TransactionResult struct {
-	Confirm                bool   `json:"confirm"`
-	Message                string `json:"message"`
-	TXHash                   string `json:"tx_hash"`
-	TXType                   string `json:"tx_type"`
-	TXValue                  float32    `json:"tx_value"`
-	TXFee                    float32    `json:"tx_fee"`
-	TXTotalAmount float32    `json:"tx_total_amount"` // Value + Fee
-	PreBalance             float32    `json:"pre_balance"`     // balance
-	NextBalance            float32    `json:"next_balance"`    // Current Balance in wallet - Total Transaction Amount
-	TXCreateTime     string  `json:"tx_create_time"`
+	Confirm       bool    `json:"confirm"`
+	Message       string  `json:"message"`
+	TXHash        string  `json:"tx_hash"`
+	TXType        string  `json:"tx_type"`
+	TXValue       float64 `json:"tx_value"`
+	TXFee         float64 `json:"tx_fee"`
+	CHKFeeValue   int `json:"chk_fee_value"`
+	TXTotalAmount float64 `json:"tx_total_amount"` // Value + Fee
+	PreBalance    float64 `json:"pre_balance"`     // balance
+	NextBalance   float64 `json:"next_balance"`    // Current Balance in wallet - Total Transaction Amount
+	TXCreateTime  string  `json:"tx_create_time"`
 }
 type DepositStateByAddressResult struct {
-	CoinType  string `json:"coin_type"`
-	CoinValue float32    `json:"coin_value"`
-	Confirm   bool   `json:"confirm"`
-	Message   string `json:"message"`
+	CoinType  string  `json:"coin_type"`
+	CoinValue float64 `json:"coin_value"`
+	Confirm   bool    `json:"confirm"`
+	Message   string  `json:"message"`
 }
 type DepositStateResult struct {
 	Confirm bool   `json:"confirm"`
@@ -52,7 +53,7 @@ type TXFee struct {
 }
 type Resp struct {
 	CHK_Name       string
-	CHK_Fee_Value  string
+	CHK_Fee_Value  int
 	CHK_Final_Date string
 }
 
@@ -165,14 +166,15 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	} else {
 		switch coinType {
 		case "btc":
-			fees = StrToInt(txfee.RESP[0].CHK_Fee_Value)
+			fees = txfee.RESP[0].CHK_Fee_Value
 		case "eth":
-			fees = 20 * 1000000000 * 21000  //StrToInt(txfee.RESP[0].CHK_Fee_Value) * 1000000000 * 21000
+			fees = txfee.RESP[0].CHK_Fee_Value * 1000000000 * 21000
 		case "":
-			fees = StrToInt(txfee.RESP[0].CHK_Fee_Value)
+			fees = txfee.RESP[0].CHK_Fee_Value
 		}
 	}
 
+	fmt.Println(fees)
 	//check fund
 	addr, err := btc.GetAddrBal(sender, nil)
 	if err != nil {
@@ -189,13 +191,13 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	//sign it
 	err = skel.Sign([]string{addrKey.PrivateKey})
 	if err != nil {
-		s.ErrorMessage(w, err.Error())
+		s.ErrorMessage(w, "not_enough_und")
 		return
 	}
 	// send transaction
 	skel, err = btc.SendTX(skel)
 	if err != nil {
-		s.ErrorMessage(w, err.Error())
+		s.ErrorMessage(w, "not_enough_und")
 		return
 	}
 
@@ -266,10 +268,11 @@ func (s *TransactionServer) HandleSend(w http.ResponseWriter, r *http.Request) {
 	txResult.TXHash = skel.Trans.Hash
 	txResult.TXType = coinType
 	txResult.TXCreateTime = time.Now().Format("2006-01-02 15:04:05")
-	txResult.TXValue = ConvertToCoin(coinType, skel.Trans.Total)  
-	txResult.TXFee = ConvertToCoin(coinType, skel.Trans.Fees) 
+	txResult.TXValue = ConvertToCoin(coinType, skel.Trans.Total)
+	txResult.TXFee = ConvertToCoin(coinType, skel.Trans.Fees)
+	txResult.CHKFeeValue = txfee.RESP[0].CHK_Fee_Value
 	txResult.TXTotalAmount = txResult.TXValue + txResult.TXFee
-	txResult.PreBalance = ConvertToCoin(coinType, addr.Balance) 
+	txResult.PreBalance = ConvertToCoin(coinType, addr.Balance)
 	txResult.NextBalance = ConvertToCoin(coinType, addr.Balance) - txResult.TXTotalAmount
 
 	s.SendDataSuccess(w, txResult)
@@ -538,21 +541,16 @@ func (s *TransactionServer) HandleGetByHash(w http.ResponseWriter, r *http.Reque
 	s.SendDataSuccess(w, u)
 }
 
-func ConvertToCoin(coinType string, value int) float32 {
-	var result float32
+func ConvertToCoin(coinType string, value int) float64 {
+	var result float64
 	switch coinType {
 	case "btc":
-		result = float32(value) / 100000000
+		result = float64(value) / 100000000
 	case "eth":
-		result = float32(value) / 1000000000000000000
+		result = float64(value) / 1000000000000000000
 	case "":
-		result = float32(value) / 100000000
+		result = float64(value) / 100000000
 	}
 
 	return result
-}
-
-func ConvertDateTime(value int64) string {
-	t := time.Unix(0, value)
-	return t.Format("2006-01-02 15:04:05")
 }
